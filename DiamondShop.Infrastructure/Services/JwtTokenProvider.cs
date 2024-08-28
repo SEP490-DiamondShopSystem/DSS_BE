@@ -1,6 +1,7 @@
 ﻿using BeatvisionRemake.Application.Services.Interfaces;
 using BeatvisionRemake.Domain.Common;
 using DiamondShop.Domain.Common;
+using DiamondShop.Domain.Models.RoleAggregate;
 using DiamondShop.Infrastructure.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -27,13 +28,13 @@ namespace BeatvisionRemake.Infrastructure.Services
             _jwtBearerOptions = jwtBearerOptions.Value;
         }
 
-        public (string accessToken, DateTime expiredDate) GenerateAccessToken(IUserIdentity Identity)
+        public (string accessToken, DateTime expiredDate) GenerateAccessToken(List<Claim> claims)
         {
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SigningKey));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
             var expiredTime = DateTime.Now.AddMinutes(100);
             var tokeOptions = new JwtSecurityToken(
-                claims: GetUserClaims(Identity),
+                claims: claims,
                 expires: expiredTime,
                 signingCredentials: signinCredentials
             ); ;
@@ -42,7 +43,7 @@ namespace BeatvisionRemake.Infrastructure.Services
             return (tokenString, expiredTime);
         }
 
-        public (string refreshToken, DateTime expiredDate) GenerateRefreshToken(IUserIdentity identity)
+        public (string refreshToken, DateTime expiredDate) GenerateRefreshToken(string identityId)
         {
             return (Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
                 DateTime.Now.AddHours(7));
@@ -75,13 +76,16 @@ namespace BeatvisionRemake.Infrastructure.Services
             return principal;
         }
 
-        public IEnumerable<Claim> GetUserClaims(IUserIdentity identity)
+        public List<Claim> GetUserClaims(List<AccountRole> roles, string email, string id)
         {
             var claims = new List<Claim>();
-            foreach(var role in identity.Roles)
+            foreach(var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role.Name) );
+                claims.Add(new Claim(ClaimTypes.Role, role.Id.ToString()) );
             }
+            claims.Add(new Claim(ClaimTypes.Email, email));
+            claims.Add(new Claim(ClaimTypes.Name, id));
+
             return claims;
         }
     }

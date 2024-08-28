@@ -31,14 +31,19 @@ namespace DiamondShop.Infrastructure.Databases.Configurations
                     fullname.Property(n => n.LastName).HasColumnName("LastName");
                     fullname.Ignore(n => n.Value);
                 });
-            builder.Ignore(o => o.Identity);
             builder.HasOne<CustomIdentityUser>()
                 .WithOne()
                 .HasForeignKey<Customer>(c => c.IdentityId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(c => c.Roles)
+                .WithMany(a => a.Customers);
+
 
             builder.HasKey(o => o.Id);
+            builder.HasIndex(o => o.Id);
+            builder.HasIndex(o => o.IdentityId);
+
         }
     }
 }

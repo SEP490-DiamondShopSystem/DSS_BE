@@ -15,8 +15,8 @@ namespace DiamondShop.Application.Services.Interfaces
     {
         Task<Result<string>> Register(string email, string password, FullName fullname, CancellationToken cancellationToken = default);
         Task<Result<AuthenticationResultDto>> Login(string email, string password, CancellationToken cancellationToken = default);
-        Task<Result> Logout(IUserIdentity userIdentity, CancellationToken cancellationToken = default);
-        Task<Result<IUserIdentity>> GetUserIdentity(string identityId, CancellationToken cancellationToken = default);
+        Task<Result> Logout(string identityID, CancellationToken cancellationToken = default);
+        //Task<Result<IUserIdentity>> GetUserIdentity(string identityId, CancellationToken cancellationToken = default);
         Task<Result> ConfirmEmail();
         Task<Result> SendConfirmEmail();
         Task<Result> ResetPassword();

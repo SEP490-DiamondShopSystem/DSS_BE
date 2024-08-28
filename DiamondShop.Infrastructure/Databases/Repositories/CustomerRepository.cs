@@ -1,8 +1,11 @@
 ﻿using DiamondShop.Application.Services.Interfaces;
 using DiamondShop.Domain.Common;
 using DiamondShop.Domain.Models.CustomerAggregate;
+using DiamondShop.Domain.Models.CustomerAggregate.ValueObjects;
+using DiamondShop.Domain.Models.RoleAggregate;
 using DiamondShop.Domain.Repositories;
 using DiamondShop.Domain.Roles;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,40 +16,44 @@ namespace DiamondShop.Infrastructure.Databases.Repositories
 {
     internal class CustomerRepository : BaseRepository<Customer>, ICustomerRepository
     {
-        private readonly IAuthorizationService _authorizationService;
-        private readonly IAuthenticationService _authenticationService;
 
-
-        public CustomerRepository(DiamondShopDbContext dbContext, IAuthorizationService authorizationService, IAuthenticationService authenticationService) : base(dbContext)
+        public CustomerRepository(DiamondShopDbContext dbContext) : base(dbContext)
         {
-            _authorizationService = authorizationService;
-            _authenticationService = authenticationService;
+            
         }
-
+        public override async Task Create(Customer entity, CancellationToken token = default)
+        {
+            var userRoles = entity.Roles;
+            base.Create(entity, token);
+            foreach (var role in userRoles)
+            {
+                var changetracker  = _dbContext.ChangeTracker.Entries();
+                _dbContext.Entry(role).State = EntityState.Unchanged;
+            }
+            
+        }
+        public override async Task Update(Customer entity, CancellationToken token = default)
+        {
+            var userRoles  = entity.Roles;
+            base.Update(entity, token);
+            foreach (var role in userRoles)
+            {
+                var changetracker = _dbContext.ChangeTracker.Entries();
+                _dbContext.Entry(role).State = EntityState.Unchanged;
+            }
+            //var changeEntity = _dbContext.ChangeTracker.Entries().ToList();
+            
+        }
         public override async Task<Customer?> GetById(CancellationToken token = default, params object[] ids)
         {
-            var find = await _set.FindAsync(ids);
-            if(find == null)
-            {
-                return null;
-            }
-            var getResult= await _authenticationService.GetUserIdentity(find.IdentityId,token);
-            if(getResult.IsSuccess is false ) 
-            {
-                throw new NullReferenceException("Cannot found user identity");
-            }
-            find.SetIdentity(getResult.Value);
+            CustomerId customerId = (CustomerId)ids[0];
+            var find = await _set.Include(c => c.Roles).FirstOrDefaultAsync(c => c.Id == customerId);
             return find;
         }
 
-        public async Task AddRole(IUserIdentity identity, DiamondShopCustomerRole diamondShopCustomerRole, CancellationToken cancellationToken = default)
+        public async Task<Customer?> GetByIdentityId(string identityId, CancellationToken cancellationToken = default)
         {
-            await _authorizationService.AddToRole(identity, diamondShopCustomerRole.Value, cancellationToken);
-        }
-
-        public async Task RemoveRole(IUserIdentity identity, DiamondShopCustomerRole diamondShopCustomerRole, CancellationToken cancellationToken = default)
-        {
-            await _authorizationService.RemoveFromRole(identity,diamondShopCustomerRole.Value,cancellationToken);
+            return await _set.Include(c => c.Roles).FirstOrDefaultAsync(a => a.IdentityId == identityId, cancellationToken);
         }
     }
 }

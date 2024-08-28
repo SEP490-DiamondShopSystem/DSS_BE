@@ -22,7 +22,7 @@ namespace DiamondShop.Infrastructure.Databases.Repositories
 
         public virtual async Task Create(T entity, CancellationToken token = default)
         {
-            await _set.AddAsync(entity, token);
+             _set.AddAsync(entity, token).GetAwaiter().GetResult();
         }
 
         public virtual async Task Delete(T entity, CancellationToken token = default)

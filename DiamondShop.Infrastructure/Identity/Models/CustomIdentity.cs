@@ -13,7 +13,7 @@ using System.Xml.Linq;
 
 namespace DiamondShop.Infrastructure.Identity.Models
 {
-    public class CustomIdentityUser : IdentityUser<string> , IUserIdentity
+    public class CustomIdentityUser : IdentityUser<string> 
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public override string Id { get; set; } = Guid.NewGuid().ToString();    
@@ -31,13 +31,6 @@ namespace DiamondShop.Infrastructure.Identity.Models
         public virtual List<CustomIdentityRole> UserRoles { get; set; } = new();
         public virtual List<CustomIdentityUserLogins> UserLogins { get; set; } = new();
 
-        public List<Role> Roles { 
-            get => UserRoles.Select(r =>  new Role(r.Id,r.Name)).ToList()  ;
-        }
-        public List<Claim> Claims { 
-            get => UserClaims.Select(c => c.ToClaim()).ToList();
-        }
-        public string IdentityId => Id;
 
     }
     public class CustomIdentityRole : IdentityRole<string>

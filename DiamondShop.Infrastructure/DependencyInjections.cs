@@ -19,7 +19,6 @@ using DiamondShop.Infrastructure.Identity.Models;
 using Microsoft.AspNetCore.Identity;
 using DiamondShop.Infrastructure.Securities;
 using DiamondShop.Infrastructure.Securities.Authentication;
-using DiamondShop.Infrastructure.Securities.Authorization;
 
 namespace DiamondShop.Infrastructure
 {
@@ -43,6 +42,8 @@ namespace DiamondShop.Infrastructure
             });
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<IStaffRepository, StaffRepository>();    
+            services.AddScoped<IAccountRoleRepository, AccountRoleRepository>();
             
             return services;
         }
@@ -68,8 +69,6 @@ namespace DiamondShop.Infrastructure
             });
             services.AddScoped<IJwtTokenProvider, JwtTokenProvider>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
-            services.AddScoped<IAuthorizationService, AuthorizationService>();
-
 
 
             return services;

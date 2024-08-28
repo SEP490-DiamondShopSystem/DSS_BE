@@ -30,15 +30,15 @@ namespace DiamondShop.Infrastructure.Securities
             _jwtOptions = jwtOptions.Value;
             _diamondShopDbContext = dbContext;
         }
-        public async Task<IdentityResult> SetRefreshTokenAsync(IUserIdentity user, string? tokenValue, DateTime expiredDate, CancellationToken cancellationToken = default)
+        public async Task<IdentityResult> SetRefreshTokenAsync(string identityId, string? tokenValue, DateTime expiredDate, CancellationToken cancellationToken = default)
         {
             
             ThrowIfDisposed();
             var loginProvider = _jwtOptions.ValidIssuer;
             ArgumentNullException.ThrowIfNull(tokenValue);
-            ArgumentNullException.ThrowIfNull(user);
+            ArgumentNullException.ThrowIfNull(identityId);
             ArgumentNullException.ThrowIfNull(loginProvider);
-            var tryGetOldRefreshToken = await _diamondShopDbContext.UserTokens.FirstOrDefaultAsync(t => t.UserId == user.IdentityId && t.Name == REFRESH_TOKEN);
+            var tryGetOldRefreshToken = await _diamondShopDbContext.UserTokens.FirstOrDefaultAsync(t => t.UserId == identityId && t.Name == REFRESH_TOKEN);
             if (tryGetOldRefreshToken != null)
             {
                 _diamondShopDbContext.UserTokens.Remove(tryGetOldRefreshToken);
@@ -48,20 +48,20 @@ namespace DiamondShop.Infrastructure.Securities
                 ExpiredDate = expiredDate,
                 LoginProvider = loginProvider,
                 Name = REFRESH_TOKEN,
-                UserId = user.IdentityId,
+                UserId = identityId,
                 Value = tokenValue,
             });
             _diamondShopDbContext.SaveChanges();
             return IdentityResult.Success;
 
         }
-        public async Task<IdentityResult> RemoveRefreshTokenAsync(IUserIdentity user, CancellationToken cancellationToken =default)
+        public async Task<IdentityResult> RemoveRefreshTokenAsync(string identityId, CancellationToken cancellationToken =default)
         {
             ThrowIfDisposed();
             var loginProvider = _jwtOptions.ValidIssuer;
-            ArgumentNullException.ThrowIfNull(user);
+            ArgumentNullException.ThrowIfNull(identityId);
             ArgumentNullException.ThrowIfNull(loginProvider);
-            var tryGetOldRefreshToken = await _diamondShopDbContext.UserTokens.FirstOrDefaultAsync(t => t.UserId == user.IdentityId && t.Name == REFRESH_TOKEN);
+            var tryGetOldRefreshToken = await _diamondShopDbContext.UserTokens.FirstOrDefaultAsync(t => t.UserId == identityId && t.Name == REFRESH_TOKEN);
             if (tryGetOldRefreshToken != null)
             {
                 _diamondShopDbContext.UserTokens.Remove(tryGetOldRefreshToken);

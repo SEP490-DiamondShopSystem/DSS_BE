@@ -1,4 +1,6 @@
-﻿using DiamondShop.Infrastructure.Databases;
+﻿using DiamondShop.Application.Services.Data;
+using DiamondShop.Domain.Repositories;
+using DiamondShop.Infrastructure.Databases;
 using DiamondShop.Infrastructure.Securities;
 using System.Net.NetworkInformation;
 
@@ -9,10 +11,9 @@ namespace DiamondShop.Api.Extensions
         public static async void SeedData(this IApplicationBuilder app)
         {
             using IServiceScope scope = app.ApplicationServices.CreateScope();
-            CustomUserManager userManager = scope.ServiceProvider.GetRequiredService<CustomUserManager>();
-            CustomRoleManager roleManager = scope.ServiceProvider.GetRequiredService<CustomRoleManager>();
-            CustomSigninManager signinManager = scope.ServiceProvider.GetRequiredService<CustomSigninManager>();
-            await Seeding.SeedAsync(userManager,roleManager);
+            IAccountRoleRepository roleRepository = scope.ServiceProvider.GetRequiredService<IAccountRoleRepository>();
+            IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            await Seeding.SeedAsync(roleRepository, unitOfWork);
         }
     }
 }

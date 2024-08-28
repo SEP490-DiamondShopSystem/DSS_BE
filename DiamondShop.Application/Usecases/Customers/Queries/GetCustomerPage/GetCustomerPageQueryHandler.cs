@@ -28,6 +28,7 @@ namespace DiamondShop.Application.Usecases.Customers.Queries.GetCustomerPage
             var query = _customerRepository.GetQuery();
             var trueCurrent = request.current * request.size;
             query.Skip(trueCurrent).Take(request.size);
+            
             var result = query.ToList();
             var totalPage = _customerRepository.GetCount();
             return Result.Ok(new PagingResponseDto<Customer>(

@@ -14,15 +14,6 @@ namespace DiamondShop.Infrastructure.Databases.Configurations
 {
     internal class IdentityConfiguration
     {
-        internal static readonly CustomIdentityRole[] SYSTEM_ROLE =
-        {
-            new CustomIdentityRole(DiamondShopAdminRole.Admin.Value.Id,DiamondShopAdminRole.Admin.Value.Name),
-            new CustomIdentityRole(DiamondShopCustomerRole.Customer.Value.Id,DiamondShopCustomerRole.Customer.Value.Name),
-            new CustomIdentityRole(DiamondShopStoreRoles.Manager.Value.Id,DiamondShopStoreRoles.Manager.Value.Name),   
-            new CustomIdentityRole(DiamondShopStoreRoles.StorageManager.Value.Id,DiamondShopStoreRoles.StorageManager.Value.Name),
-            new CustomIdentityRole(DiamondShopStoreRoles.Staff.Value.Id, DiamondShopStoreRoles.Staff.Value.Name),
-
-        };
         internal static void ApplyIdentityConfiguration(ModelBuilder builder)
         {
             builder.Entity<CustomIdentityUser>().ToTable("User");
@@ -55,9 +46,6 @@ namespace DiamondShop.Infrastructure.Databases.Configurations
                 b.HasMany(e => e.UserRoles)
                 .WithMany(r => r.Users)
                 .UsingEntity<CustomIdentityUserRole>();
-                b.Ignore(r => r.Roles);
-                b.Ignore(r => r.Claims);
-                b.Ignore(r => r.IdentityId);
             });
             builder.Entity<CustomIdentityRole>(b =>
             {

@@ -11,8 +11,6 @@ namespace DiamondShop.Domain.Repositories
 {
     public interface ICustomerRepository : IBaseRepository<Customer>
     {
-        Task AddRole(IUserIdentity identity, DiamondShopCustomerRole diamondShopCustomerRole, CancellationToken cancellationToken  = default);
-        Task RemoveRole(IUserIdentity identity, DiamondShopCustomerRole diamondShopCustomerRole, CancellationToken cancellationToken = default);
-
+        Task<Customer> GetByIdentityId(string id, CancellationToken cancellationToken);
     }
 }

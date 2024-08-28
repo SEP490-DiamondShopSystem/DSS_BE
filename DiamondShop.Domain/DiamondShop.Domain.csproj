@@ -14,4 +14,8 @@
     <Folder Include="Services\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DiamondShop.Commons\DiamondShop.Commons.csproj" />
+  </ItemGroup>
+
 </Project>

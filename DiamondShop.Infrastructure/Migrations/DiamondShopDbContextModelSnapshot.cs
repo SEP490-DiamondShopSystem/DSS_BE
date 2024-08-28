@@ -22,13 +22,25 @@ namespace DiamondShop.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CustomerDiamondShopCustomerRole", b =>
+                {
+                    b.Property<string>("CustomersId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RolesId")
+                        .HasColumnType("text");
+
+                    b.HasKey("CustomersId", "RolesId");
+
+                    b.HasIndex("RolesId");
+
+                    b.ToTable("CustomerDiamondShopCustomerRole");
+                });
+
             modelBuilder.Entity("DiamondShop.Domain.Models.CustomerAggregate.Customer", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
-
-                    b.Property<DateTime?>("BirthDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -40,10 +52,41 @@ namespace DiamondShop.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Id");
+
                     b.HasIndex("IdentityId")
                         .IsUnique();
 
                     b.ToTable("Customer", (string)null);
+                });
+
+            modelBuilder.Entity("DiamondShop.Domain.Models.RoleAggregate.AccountRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleDescription")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("RoleType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("Account_Role", (string)null);
+
+                    b.HasDiscriminator<int>("RoleType").HasValue(-1);
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("DiamondShop.Domain.Models.StaffAggregate.Staff", b =>
@@ -55,11 +98,17 @@ namespace DiamondShop.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("IdentityId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Id");
 
                     b.HasIndex("IdentityId")
                         .IsUnique();
@@ -274,6 +323,50 @@ namespace DiamondShop.Infrastructure.Migrations
                     b.ToTable("UserToken", (string)null);
                 });
 
+            modelBuilder.Entity("DiamondShopStoreRolesStaff", b =>
+                {
+                    b.Property<string>("RolesId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StaffsId")
+                        .HasColumnType("text");
+
+                    b.HasKey("RolesId", "StaffsId");
+
+                    b.HasIndex("StaffsId");
+
+                    b.ToTable("DiamondShopStoreRolesStaff");
+                });
+
+            modelBuilder.Entity("DiamondShop.Domain.Roles.DiamondShopCustomerRole", b =>
+                {
+                    b.HasBaseType("DiamondShop.Domain.Models.RoleAggregate.AccountRole");
+
+                    b.HasDiscriminator().HasValue(0);
+                });
+
+            modelBuilder.Entity("DiamondShop.Domain.Roles.DiamondShopStoreRoles", b =>
+                {
+                    b.HasBaseType("DiamondShop.Domain.Models.RoleAggregate.AccountRole");
+
+                    b.HasDiscriminator().HasValue(1);
+                });
+
+            modelBuilder.Entity("CustomerDiamondShopCustomerRole", b =>
+                {
+                    b.HasOne("DiamondShop.Domain.Models.CustomerAggregate.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiamondShop.Domain.Roles.DiamondShopCustomerRole", null)
+                        .WithMany()
+                        .HasForeignKey("RolesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DiamondShop.Domain.Models.CustomerAggregate.Customer", b =>
                 {
                     b.HasOne("DiamondShop.Infrastructure.Identity.Models.CustomIdentityUser", null)
@@ -282,7 +375,7 @@ namespace DiamondShop.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("DiamondShop.Domain.Models.CustomerAggregate.Customer.FullName#DiamondShop.Domain.Common.ValueObjects.FullName", "FullName", b1 =>
+                    b.OwnsOne("DiamondShop.Domain.Common.ValueObjects.FullName", "FullName", b1 =>
                         {
                             b1.Property<string>("CustomerId")
                                 .HasColumnType("text");
@@ -299,7 +392,7 @@ namespace DiamondShop.Infrastructure.Migrations
 
                             b1.HasKey("CustomerId");
 
-                            b1.ToTable("Customer", (string)null);
+                            b1.ToTable("Customer");
 
                             b1.WithOwner()
                                 .HasForeignKey("CustomerId");
@@ -317,7 +410,7 @@ namespace DiamondShop.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("DiamondShop.Domain.Models.StaffAggregate.Staff.FullName#DiamondShop.Domain.Common.ValueObjects.FullName", "FullName", b1 =>
+                    b.OwnsOne("DiamondShop.Domain.Common.ValueObjects.FullName", "FullName", b1 =>
                         {
                             b1.Property<string>("StaffId")
                                 .HasColumnType("text");
@@ -334,7 +427,7 @@ namespace DiamondShop.Infrastructure.Migrations
 
                             b1.HasKey("StaffId");
 
-                            b1.ToTable("Staff", (string)null);
+                            b1.ToTable("Staff");
 
                             b1.WithOwner()
                                 .HasForeignKey("StaffId");
@@ -393,6 +486,21 @@ namespace DiamondShop.Infrastructure.Migrations
                     b.HasOne("DiamondShop.Infrastructure.Identity.Models.CustomIdentityUser", null)
                         .WithMany("UserTokens")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DiamondShopStoreRolesStaff", b =>
+                {
+                    b.HasOne("DiamondShop.Domain.Roles.DiamondShopStoreRoles", null)
+                        .WithMany()
+                        .HasForeignKey("RolesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiamondShop.Domain.Models.StaffAggregate.Staff", null)
+                        .WithMany()
+                        .HasForeignKey("StaffsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

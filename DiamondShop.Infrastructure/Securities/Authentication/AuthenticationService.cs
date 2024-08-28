@@ -5,6 +5,8 @@ using DiamondShop.Application.Services.Interfaces;
 using DiamondShop.Commons;
 using DiamondShop.Domain.Common;
 using DiamondShop.Domain.Common.ValueObjects;
+using DiamondShop.Domain.Models.RoleAggregate;
+using DiamondShop.Domain.Repositories;
 using DiamondShop.Infrastructure.Identity.Models;
 using FluentResults;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,8 +29,10 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AuthenticationService> _logger;
         private readonly IJwtTokenProvider _jwtTokenProvider;
+        private readonly ICustomerRepository _customerRepository;
+        private readonly IAccountRoleRepository _accountRoleRepository;
 
-        public AuthenticationService(CustomRoleManager roleManager, CustomSigninManager signinManager, CustomUserManager userManager, IUnitOfWork unitOfWork, ILogger<AuthenticationService> logger, IJwtTokenProvider jwtTokenProvider)
+        public AuthenticationService(CustomRoleManager roleManager, CustomSigninManager signinManager, CustomUserManager userManager, IUnitOfWork unitOfWork, ILogger<AuthenticationService> logger, IJwtTokenProvider jwtTokenProvider, ICustomerRepository customerRepository, IAccountRoleRepository accountRoleRepository)
         {
             _roleManager = roleManager;
             _signinManager = signinManager;
@@ -35,6 +40,8 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
             _unitOfWork = unitOfWork;
             _logger = logger;
             _jwtTokenProvider = jwtTokenProvider;
+            _customerRepository = customerRepository;
+            _accountRoleRepository = accountRoleRepository;
         }
 
         public Task<Result> ConfirmEmail()
@@ -47,15 +54,6 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
             throw new NotImplementedException();
         }
 
-        public async Task<Result<IUserIdentity>> GetUserIdentity(string identityId, CancellationToken cancellationToken = default)
-        {
-            var findResult = await _userManager.FindByIdAsync(identityId);
-            if(findResult is null)
-            {
-                return Result.Fail(new NotFoundError("User Not Found"));
-            }
-            return findResult;
-        }
 
         public async Task<Result<AuthenticationResultDto>> Login(string email, string password, CancellationToken cancellationToken = default)
         {
@@ -64,10 +62,13 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
             {
                 return Result.Fail(new NotFoundError("User Not Found"));
             }
+            var getCustomer = await _customerRepository.GetByIdentityId(tryGetUser.Id,cancellationToken);
             try
             {
-                var accTokenResult = _jwtTokenProvider.GenerateAccessToken(tryGetUser);
-                var refreshTokenResult = _jwtTokenProvider.GenerateRefreshToken(tryGetUser);
+                List<AccountRole> toAccountRole = getCustomer.Roles.Select(r => (AccountRole)r).ToList();
+                List<Claim> userClaim = _jwtTokenProvider.GetUserClaims(toAccountRole, getCustomer.Email,getCustomer.IdentityId);
+                var accTokenResult = _jwtTokenProvider.GenerateAccessToken(userClaim);
+                var refreshTokenResult = _jwtTokenProvider.GenerateRefreshToken(getCustomer.IdentityId);
 
                 return Result.Ok(new AuthenticationResultDto(
                     accessToken: accTokenResult.accessToken,
@@ -84,9 +85,9 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
             }
         }
 
-        public async Task<Result> Logout(IUserIdentity userIdentity, CancellationToken cancellationToken = default)
+        public async Task<Result> Logout(string identityId, CancellationToken cancellationToken = default)
         {
-            await _userManager.RemoveRefreshTokenAsync(userIdentity,cancellationToken);
+            await _userManager.RemoveRefreshTokenAsync(identityId, cancellationToken);
             return Result.Ok();
         }
 
@@ -112,7 +113,7 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
                     }
                     return Result.Fail(new ValidationError("Password Error", errDict));
                 }
-                return Result.Ok(identity.IdentityId);
+                return Result.Ok(identity.Id);
 
             }
             catch (Exception ex)

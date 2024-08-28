@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Folder Include="Databases\Interceptors\" />
+    <Folder Include="Securities\Authorization\" />
   </ItemGroup>
 
   <ItemGroup>
