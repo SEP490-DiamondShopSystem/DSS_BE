@@ -4,6 +4,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace DiamondShop.Infrastructure.Migrations
 {
     /// <inheritdoc />
@@ -24,6 +26,23 @@ namespace DiamondShop.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Account_Role", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "outbox_message",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Type = table.Column<string>(type: "text", nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: false),
+                    ProcessTime = table.Column<int>(type: "integer", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CompleteTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Exception = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_outbox_message", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -218,7 +237,7 @@ namespace DiamondShop.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CustomerDiamondShopCustomerRole",
+                name: "AccountRoleCustomer",
                 columns: table => new
                 {
                     CustomersId = table.Column<string>(type: "text", nullable: false),
@@ -226,15 +245,15 @@ namespace DiamondShop.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CustomerDiamondShopCustomerRole", x => new { x.CustomersId, x.RolesId });
+                    table.PrimaryKey("PK_AccountRoleCustomer", x => new { x.CustomersId, x.RolesId });
                     table.ForeignKey(
-                        name: "FK_CustomerDiamondShopCustomerRole_Account_Role_RolesId",
+                        name: "FK_AccountRoleCustomer_Account_Role_RolesId",
                         column: x => x.RolesId,
                         principalTable: "Account_Role",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CustomerDiamondShopCustomerRole_Customer_CustomersId",
+                        name: "FK_AccountRoleCustomer_Customer_CustomersId",
                         column: x => x.CustomersId,
                         principalTable: "Customer",
                         principalColumn: "Id",
@@ -242,7 +261,7 @@ namespace DiamondShop.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DiamondShopStoreRolesStaff",
+                name: "AccountRoleStaff",
                 columns: table => new
                 {
                     RolesId = table.Column<string>(type: "text", nullable: false),
@@ -250,19 +269,33 @@ namespace DiamondShop.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DiamondShopStoreRolesStaff", x => new { x.RolesId, x.StaffsId });
+                    table.PrimaryKey("PK_AccountRoleStaff", x => new { x.RolesId, x.StaffsId });
                     table.ForeignKey(
-                        name: "FK_DiamondShopStoreRolesStaff_Account_Role_RolesId",
+                        name: "FK_AccountRoleStaff_Account_Role_RolesId",
                         column: x => x.RolesId,
                         principalTable: "Account_Role",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_DiamondShopStoreRolesStaff_Staff_StaffsId",
+                        name: "FK_AccountRoleStaff_Staff_StaffsId",
                         column: x => x.StaffsId,
                         principalTable: "Staff",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "Account_Role",
+                columns: new[] { "Id", "RoleDescription", "RoleName", "RoleType" },
+                values: new object[,]
+                {
+                    { "1", "customer", "customer", 0 },
+                    { "11", "staff", "staff", 1 },
+                    { "2", "customer_bronze", "customer_bronze", 0 },
+                    { "22", "manager", "manager", 1 },
+                    { "3", "customer_silver", "customer_silver", 0 },
+                    { "33", "admin", "admin", 1 },
+                    { "4", "customer_gold", "customer_gold", 0 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -270,6 +303,16 @@ namespace DiamondShop.Infrastructure.Migrations
                 table: "Account_Role",
                 column: "RoleName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccountRoleCustomer_RolesId",
+                table: "AccountRoleCustomer",
+                column: "RolesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccountRoleStaff_StaffsId",
+                table: "AccountRoleStaff",
+                column: "StaffsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Customer_Id",
@@ -283,14 +326,9 @@ namespace DiamondShop.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomerDiamondShopCustomerRole_RolesId",
-                table: "CustomerDiamondShopCustomerRole",
-                column: "RolesId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DiamondShopStoreRolesStaff_StaffsId",
-                table: "DiamondShopStoreRolesStaff",
-                column: "StaffsId");
+                name: "IX_outbox_message_Id",
+                table: "outbox_message",
+                column: "Id");
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
@@ -345,10 +383,13 @@ namespace DiamondShop.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CustomerDiamondShopCustomerRole");
+                name: "AccountRoleCustomer");
 
             migrationBuilder.DropTable(
-                name: "DiamondShopStoreRolesStaff");
+                name: "AccountRoleStaff");
+
+            migrationBuilder.DropTable(
+                name: "outbox_message");
 
             migrationBuilder.DropTable(
                 name: "RoleClaims");

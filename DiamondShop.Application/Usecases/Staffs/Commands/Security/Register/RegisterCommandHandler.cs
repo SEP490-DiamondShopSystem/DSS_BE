@@ -36,8 +36,8 @@ namespace DiamondShop.Application.Usecases.Staffs.Commands.Security.Register
 
         public async Task<Result<Staff>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
-            List<DiamondShopStoreRoles> storeRoles = await _accountRoleRepository.GetStaffRoles();
-            DiamondShopStoreRoles staffRole = storeRoles.FirstOrDefault(c => c.Id == DiamondShopStoreRoles.Staff.Id);
+            List<AccountRole> storeRoles = await _accountRoleRepository.GetRoles();
+            AccountRole staffRole = storeRoles.FirstOrDefault(c => c.Id == AccountRole.Staff.Id);
             //start transaction
             await _unitOfWork.BeginTransactionAsync();
             var identityResult = await _authenticationService.Register(request.email,request.password,request.fullName, true,cancellationToken);
@@ -48,7 +48,7 @@ namespace DiamondShop.Application.Usecases.Staffs.Commands.Security.Register
             staff.AddRole(staffRole);
             if (request.isManager)
             {
-                DiamondShopStoreRoles managerRole = storeRoles.FirstOrDefault(c => c.Id == DiamondShopStoreRoles.Manager.Id);
+                AccountRole managerRole = storeRoles.FirstOrDefault(c => c.Id == AccountRole.Manager.Id);
                 staff.AddRole(managerRole);   
             }
             await _staffRepository.Create(staff);

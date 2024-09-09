@@ -1,6 +1,7 @@
 ﻿using DiamondShop.Application.Services.Data;
 using DiamondShop.Application.Services.Interfaces;
 using DiamondShop.Domain.Common.ValueObjects;
+using DiamondShop.Domain.Models.RoleAggregate;
 using DiamondShop.Domain.Models.StaffAggregate;
 using DiamondShop.Domain.Repositories;
 using DiamondShop.Domain.Roles;
@@ -32,9 +33,9 @@ namespace DiamondShop.Application.Usecases.Staffs.Commands.Security.RegisterAdmi
 
         public async Task<Result<Staff>> Handle(RegisterAdminCommand request, CancellationToken cancellationToken)
         {
-            List<DiamondShopStoreRoles> storeRoles = await _accountRoleRepository.GetStaffRoles();
-            DiamondShopStoreRoles staffRole = storeRoles.FirstOrDefault(c => c.Id == DiamondShopStoreRoles.Staff.Id);
-            DiamondShopStoreRoles adminRole = storeRoles.FirstOrDefault(c => c.Id == DiamondShopStoreRoles.Admin.Id);
+            List<AccountRole> storeRoles = await _accountRoleRepository.GetRoles();
+            AccountRole staffRole = storeRoles.FirstOrDefault(c => c.Id == AccountRole.Staff.Id);
+            AccountRole adminRole = storeRoles.FirstOrDefault(c => c.Id == AccountRole.Admin.Id);
             //start transaction
             await _unitOfWork.BeginTransactionAsync();
             Staff customer;

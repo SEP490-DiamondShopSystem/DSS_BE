@@ -6,6 +6,7 @@ using DiamondShop.Application.Usecases.Staffs.Commands.Security.Login;
 using DiamondShop.Application.Usecases.Staffs.Commands.Security.Register;
 using DiamondShop.Application.Usecases.Staffs.Commands.Security.RegisterAdmin;
 using DiamondShop.Domain.Common.ValueObjects;
+using DiamondShop.Domain.Models.RoleAggregate;
 using DiamondShop.Domain.Roles;
 using FluentResults;
 using MediatR;
@@ -121,7 +122,7 @@ namespace DiamondShop.Api.Controllers
             return Ok(result.Value);
         }
         [HttpPut("CustomerRefresh")]
-        [Authorize(Roles = DiamondShopCustomerRole.CustomerId)]
+        [Authorize(Roles = AccountRole.CustomerId)]
         public async Task<ActionResult> CustomerRefreshingToken([FromQuery] string refreshToken, CancellationToken cancellationToken = default)
         {
             var result = await _sender.Send(new DiamondShop.Application.Usecases.Customers.Commands.Security.RefreshToken.RefreshTokenCommand(refreshToken));
@@ -131,7 +132,7 @@ namespace DiamondShop.Api.Controllers
         }
         
         [HttpPut("StaffRefresh")]
-        [Authorize(Roles = DiamondShopStoreRoles.StaffId)]
+        [Authorize(Roles = AccountRole.StaffId)]
         public async Task<ActionResult> StaffRefreshingToken([FromQuery] string refreshToken, CancellationToken cancellationToken = default)
         {
             var result = await _sender.Send(new DiamondShop.Application.Usecases.Staffs.Commands.Security.RefreshToken.RefreshTokenCommand(refreshToken));
@@ -141,7 +142,7 @@ namespace DiamondShop.Api.Controllers
             return Ok(result.Value);
         }
         [HttpPut("Ban")]
-        [Authorize(Roles = DiamondShopStoreRoles.StaffId)]
+        [Authorize(Roles = AccountRole.StaffId)]
         public async Task<ActionResult> BanAccount([FromQuery]string identityId , CancellationToken cancellationToken =default)
         {
             var result = await _sender.Send(new BanAccountCommand(identityId));

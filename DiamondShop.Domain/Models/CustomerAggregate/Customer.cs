@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace DiamondShop.Domain.Models.CustomerAggregate
 {
-    public class Customer : Entity<CustomerId>, IAggregateRoot 
+    public class Customer : Entity<CustomerId>, IAggregateRoot , IAccountBase
     {
         private Customer()
         {
@@ -26,7 +26,7 @@ namespace DiamondShop.Domain.Models.CustomerAggregate
             Email = email;
         }
         public string IdentityId { get; private set; }
-        public List<DiamondShopCustomerRole> Roles { get; private set; } = new();
+        public List<AccountRole> Roles { get; private set; } = new();
         public FullName FullName { get; private set; }
         public string Email { get; private set; }
         public static Customer Create( FullName fullName, string email)
@@ -38,14 +38,18 @@ namespace DiamondShop.Domain.Models.CustomerAggregate
         {
             IdentityId = identityID; 
         }
-        public void AddRole(DiamondShopCustomerRole role) 
+        public void AddRole(AccountRole role) 
         {
             ArgumentNullException.ThrowIfNull(role);
+            if (role.RoleType != AccountRoleAggregate.AccountRoleType.Customer)
+                throw new ArgumentException("invalid role");
             Roles.Add(role);
         }
-        public void RemoveRole(DiamondShopCustomerRole role)
+        public void RemoveRole(AccountRole role)
         {
             ArgumentNullException.ThrowIfNull(role);
+            if (role.RoleType != AccountRoleAggregate.AccountRoleType.Customer)
+                throw new ArgumentException("invalid role");
             Roles.Remove(role);
         }
     }

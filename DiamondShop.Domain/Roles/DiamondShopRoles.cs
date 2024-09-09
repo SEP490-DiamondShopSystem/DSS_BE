@@ -25,46 +25,47 @@ namespace DiamondShop.Domain.Roles
     //    }
 
     //}
-    public class DiamondShopStoreRoles : AccountRole
-    {
-        public const string StaffId = "11";
-        public const string ManagerId = "22";
-        public const string AdminId = "33";
+    //public class DiamondShopStoreRoles : AccountRole
+    //{
+    //    public const string StaffId = "11";
+    //    public const string ManagerId = "22";
+    //    public const string AdminId = "33";
 
 
-        public static DiamondShopStoreRoles Staff = new DiamondShopStoreRoles(new AccountRole(AccountRoleId.Create(StaffId),AccountRoleType.Staff,"staff","staff"));
-        public static DiamondShopStoreRoles Manager = new DiamondShopStoreRoles(new AccountRole(AccountRoleId.Create(ManagerId), AccountRoleType.Staff, "manager", "manager"));
-        public static DiamondShopStoreRoles Admin = new DiamondShopStoreRoles(new AccountRole(AccountRoleId.Create(AdminId), AccountRoleType.Staff, "admin", "admin"));
-        
-        public List<Staff> Staffs { get; private set; } = new();
-        
-        public DiamondShopStoreRoles(AccountRole value) : base(value.Id,value.RoleType,value.RoleName,value.RoleDescription)
-        {
-        }
-        private DiamondShopStoreRoles() : base(null, AccountRoleType.Staff, null, null) { }
+    //    public static DiamondShopStoreRoles Staff = new DiamondShopStoreRoles(new AccountRole(AccountRoleId.Create(StaffId),AccountRoleType.Staff,"staff","staff"));
+    //    public static DiamondShopStoreRoles Manager = new DiamondShopStoreRoles(new AccountRole(AccountRoleId.Create(ManagerId), AccountRoleType.Staff, "manager", "manager"));
+    //    public static DiamondShopStoreRoles Admin = new DiamondShopStoreRoles(new AccountRole(AccountRoleId.Create(AdminId), AccountRoleType.Staff, "admin", "admin"));
+
+    //    public List<Staff> Staffs { get; private set; } = new();
+
+    //    public DiamondShopStoreRoles(AccountRole value) : base(value.Id,value.RoleType,value.RoleName,value.RoleDescription)
+    //    {
+    //    }
+    //    private DiamondShopStoreRoles() : base(null, AccountRoleType.Staff, null, null) { }
 
 
-    }
-    public class DiamondShopCustomerRole : AccountRole
-    {
-        public const string CustomerId = "1";
-        public const string CustomerBronzeId= "2";
-        public const string CustomerSilverId = "3";
-        public const string CustomerGoldId = "4";
+    //}
+    //public class DiamondShopCustomerRole : AccountRole
+    //{
+    //    public const string CustomerId = "1";
+    //    public const string CustomerBronzeId= "2";
+    //    public const string CustomerSilverId = "3";
+    //    public const string CustomerGoldId = "4";
 
-        public static DiamondShopCustomerRole Customer = new  DiamondShopCustomerRole(new AccountRole(AccountRoleId.Create(CustomerId), AccountRoleType.Customer, "customer", "customer"));
-        public static DiamondShopCustomerRole CustomerBronze = new DiamondShopCustomerRole(new AccountRole(AccountRoleId.Create(CustomerBronzeId), AccountRoleType.Customer, "customer_bronze", "customer_bronze"));
-        public static DiamondShopCustomerRole CustomerSilver = new DiamondShopCustomerRole(new AccountRole(AccountRoleId.Create(CustomerSilverId), AccountRoleType.Customer, "customer_silver", "customer_silver"));
-        public static DiamondShopCustomerRole CustomerGold = new DiamondShopCustomerRole(new AccountRole(AccountRoleId.Create(CustomerGoldId), AccountRoleType.Customer, "customer_gold", "customer_gold"));
+    //    public static DiamondShopCustomerRole Customer = new  DiamondShopCustomerRole(new AccountRole(AccountRoleId.Create(CustomerId), AccountRoleType.Customer, "customer", "customer"));
+    //    public static DiamondShopCustomerRole CustomerBronze = new DiamondShopCustomerRole(new AccountRole(AccountRoleId.Create(CustomerBronzeId), AccountRoleType.Customer, "customer_bronze", "customer_bronze"));
+    //    public static DiamondShopCustomerRole CustomerSilver = new DiamondShopCustomerRole(new AccountRole(AccountRoleId.Create(CustomerSilverId), AccountRoleType.Customer, "customer_silver", "customer_silver"));
+    //    public static DiamondShopCustomerRole CustomerGold = new DiamondShopCustomerRole(new AccountRole(AccountRoleId.Create(CustomerGoldId), AccountRoleType.Customer, "customer_gold", "customer_gold"));
 
-        public List<Customer> Customers { get; private set; } = new();
+    //    public List<Customer> Customers { get; private set; } = new();
 
-        public DiamondShopCustomerRole(AccountRole value) : base(value.Id, value.RoleType, value.RoleName, value.RoleDescription)
-        {
+    //    public DiamondShopCustomerRole(AccountRole value) : base(value.Id, value.RoleType, value.RoleName, value.RoleDescription)
+    //    {
 
-        }
-        // this constructor is for ef mapping purpose, have no use
-        private DiamondShopCustomerRole() : base(null,AccountRoleType.Customer,null,null){ }
-    }
+    //    }
+    //    // this constructor is for ef mapping purpose, have no use
+    //    private DiamondShopCustomerRole() : base(null,AccountRoleType.Customer,null,null){ }
+    //}
+    public class Nothing { }
 
 }

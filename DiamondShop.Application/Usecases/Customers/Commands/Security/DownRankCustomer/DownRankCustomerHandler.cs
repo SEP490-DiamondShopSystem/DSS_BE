@@ -2,6 +2,7 @@
 using DiamondShop.Commons;
 using DiamondShop.Domain.Models.AccountRoleAggregate.ValueObjects;
 using DiamondShop.Domain.Models.CustomerAggregate.ValueObjects;
+using DiamondShop.Domain.Models.RoleAggregate;
 using DiamondShop.Domain.Repositories;
 using DiamondShop.Domain.Roles;
 using FluentResults;
@@ -33,7 +34,7 @@ namespace DiamondShop.Application.Usecases.Customers.Commands.Security.DownRankC
             var getCustomer = await _customerRepository.GetById(cancellationToken, request.CustomerId);
             if (getCustomer == null)
                 return Result.Fail(new NotFoundError("cannot found user with such id"));
-            DiamondShopCustomerRole? userRoleToRemove = getCustomer.Roles.FirstOrDefault(r => r.Id == request.RankToRemoveID);
+            AccountRole? userRoleToRemove = getCustomer.Roles.FirstOrDefault(r => r.Id == request.RankToRemoveID);
             if (userRoleToRemove == null)
                 return Result.Fail(new NotFoundError("cannot found such role in user"));
             getCustomer.RemoveRole(userRoleToRemove);

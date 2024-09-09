@@ -3,6 +3,7 @@ using DiamondShop.Commons;
 using DiamondShop.Domain.Models.AccountRoleAggregate.ValueObjects;
 using DiamondShop.Domain.Models.CustomerAggregate;
 using DiamondShop.Domain.Models.CustomerAggregate.ValueObjects;
+using DiamondShop.Domain.Models.RoleAggregate;
 using DiamondShop.Domain.Repositories;
 using DiamondShop.Domain.Roles;
 using FluentResults;
@@ -31,7 +32,7 @@ namespace DiamondShop.Application.Usecases.Customers.Commands.Security.UpRankCus
 
         public async Task<Result> Handle(UpRankCustomerCommand request, CancellationToken cancellationToken)
         {
-            List<DiamondShopCustomerRole> diamondShopCustomerRoles = await _accountRoleRepository.GetCustomerRoles();
+            List<AccountRole> diamondShopCustomerRoles = await _accountRoleRepository.GetRoles();
             var getCustomerRole = diamondShopCustomerRoles.FirstOrDefault(role => role.Id == request.NewRankID);
             if (getCustomerRole == null)
                 return Result.Fail(new NotFoundError("cannot found such customer role"));

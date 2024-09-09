@@ -18,18 +18,27 @@ namespace DiamondShop.Infrastructure.Databases.Configurations
     {
         internal static List<AccountRole> customerRoles = new List<AccountRole>
             {
-                DiamondShopCustomerRole.Customer,
-                DiamondShopCustomerRole.CustomerGold,
-                DiamondShopCustomerRole.CustomerSilver,
-                DiamondShopCustomerRole.CustomerBronze,
+                AccountRole.Customer,
+                AccountRole.CustomerGold,
+                AccountRole.CustomerSilver,
+                AccountRole.CustomerBronze,
             };
         internal static List<AccountRole> storeRoles = new List<AccountRole>
             {
-                DiamondShopStoreRoles.Staff,
-                DiamondShopStoreRoles.Manager,
-                DiamondShopStoreRoles.Admin,
+                AccountRole.Staff,
+                AccountRole.Manager,
+                AccountRole.Admin,
             };
-
+        internal static List<AccountRole> allRoles = new List<AccountRole>
+            {
+             AccountRole.Customer,
+                AccountRole.CustomerGold,
+                AccountRole.CustomerSilver,
+                AccountRole.CustomerBronze,
+                AccountRole.Staff,
+                AccountRole.Manager,
+                AccountRole.Admin,
+            };
         public void Configure(EntityTypeBuilder<AccountRole> builder)
         {
             builder.Property(o => o.Id)
@@ -42,12 +51,12 @@ namespace DiamondShop.Infrastructure.Databases.Configurations
 
             builder.Property(a => a.RoleType).IsRequired(true);
             builder.Property(a => a.RoleName).IsRequired(true).HasMaxLength(50);
-            builder.HasDiscriminator(a => a.RoleType)
-                .HasValue<AccountRole>(AccountRoleType.None)
-                .HasValue<DiamondShopCustomerRole>(AccountRoleType.Customer)
-                .HasValue<DiamondShopStoreRoles>(AccountRoleType.Staff);
+            //builder.HasDiscriminator(a => a.RoleType)
+            //    .HasValue<AccountRole>(AccountRoleType.None)
+            //    .HasValue<DiamondShopCustomerRole>(AccountRoleType.Customer)
+            //    .HasValue<DiamondShopStoreRoles>(AccountRoleType.Staff);
             builder.HasIndex(a => a.RoleName).IsUnique();
-            //builder.HasData(allRole);
+            builder.HasData(allRoles);
 
         }
     }

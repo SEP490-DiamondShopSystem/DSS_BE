@@ -19,16 +19,16 @@ namespace DiamondShop.Infrastructure.Databases
         {
             List<AccountRole> customerRoles = new List<AccountRole>
             {
-                DiamondShopCustomerRole.Customer,
-                DiamondShopCustomerRole.CustomerGold,
-                DiamondShopCustomerRole.CustomerSilver,
-                DiamondShopCustomerRole.CustomerBronze,
+                AccountRole.Customer,
+                AccountRole.CustomerGold,
+                AccountRole.CustomerSilver,
+                AccountRole.CustomerBronze,
             };
             List<AccountRole> storeRoles= new List<AccountRole>
             {
-                DiamondShopStoreRoles.Staff,
-                DiamondShopStoreRoles.Manager,
-                DiamondShopStoreRoles.Admin,
+                AccountRole.Staff,
+                AccountRole.Manager,
+                AccountRole.Admin,
             };
             await unitOfWork.BeginTransactionAsync();
             customerRoles.ForEach(async r => await accountRoleRepository.Create(r));

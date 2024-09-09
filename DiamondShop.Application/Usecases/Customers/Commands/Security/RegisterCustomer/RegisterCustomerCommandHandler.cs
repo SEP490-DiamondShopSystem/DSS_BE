@@ -37,8 +37,8 @@ namespace DiamondShop.Application.Usecases.Customers.Commands.Security.RegisterC
         {
 
             //find user role in db
-            List<DiamondShopCustomerRole> customerRoles = await _accountRoleRepository.GetCustomerRoles();
-            DiamondShopCustomerRole? customerRole = customerRoles.FirstOrDefault(c => c.Id == DiamondShopCustomerRole.Customer.Id);
+            List<AccountRole> customerRoles = await _accountRoleRepository.GetRoles();
+            AccountRole? customerRole = customerRoles.FirstOrDefault(c => c.Id == AccountRole.Customer.Id);
             if (customerRole is null)
                 throw new ArgumentNullException("no role found");
 

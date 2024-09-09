@@ -71,6 +71,8 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
             if ((info.Principal.Claims.FirstOrDefault(c => c.Type == "FAILURE") is not null))
                 return Result.Fail("Cannot call request to user infor in google , try again later");
             var getUserByEmail = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            if ( await _userManager.IsLockedOutAsync(getUserByEmail) is true)
+                return Result.Fail("cannot login, you are locked out");
             if (getUserByEmail == null)
                 return Result.Fail(new NotFoundError());
             var getCustomer = await _customerRepository.GetByIdentityId(getUserByEmail.Id, cancellationToken);
@@ -152,16 +154,13 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
 
         public async Task<Result<AuthenticationResultDto>> Login(string email, string password, CancellationToken cancellationToken = default)
         {
-            var tryGetUser = await _userManager.FindByEmailAsync(email);
-            if (tryGetUser is null)
+            var loginValidateResult = await PasswordLoginValidation(email, password);
+            if (loginValidateResult.IsFailed)
             {
-                return Result.Fail(new NotFoundError("User Not Found"));
+                return Result.Fail(loginValidateResult.Errors);
             }
-            if (await _userManager.CheckPasswordAsync(tryGetUser, password) is false)
-                return Result.Fail(new Error("password not match"));
-            if (await _userManager.IsLockedOutAsync(tryGetUser) is false)
-                return Result.Fail("can't sign, you might have been block ");
-            var getCustomer = await _customerRepository.GetByIdentityId(tryGetUser.Id, cancellationToken);
+            var userIdentity = loginValidateResult.Value;
+            var getCustomer = await _customerRepository.GetByIdentityId(userIdentity.Id, cancellationToken);
             List<AccountRole> toAccountRole = getCustomer.Roles.Select(r => (AccountRole)r).ToList();
             var authTokenDto = await GenerateTokenForUser(toAccountRole, getCustomer.Email, getCustomer.IdentityId, getCustomer.Id.Value, getCustomer.FullName.Value, cancellationToken);
             return Result.Ok(authTokenDto);
@@ -218,16 +217,13 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
 
         public async Task<Result<AuthenticationResultDto>> LoginStaff(string email, string password, CancellationToken cancellationToken = default)
         {
-            var tryGetAccount = await _userManager.FindByEmailAsync(email);
-            if (tryGetAccount is null)
+            var loginValidateResult = await PasswordLoginValidation(email, password);
+            if (loginValidateResult.IsFailed)
             {
-                return Result.Fail(new NotFoundError("account Not Found"));
+                return Result.Fail(loginValidateResult.Errors);
             }
-            if (await _userManager.CheckPasswordAsync(tryGetAccount, password) is false)
-                return Result.Fail(new Error("password not match"));
-            if (await _userManager.IsLockedOutAsync(tryGetAccount) is false)
-                return Result.Fail("can't sign, you might have been block ");
-            var getStaff = await _staffRepository.GetByIdentityId(tryGetAccount.Id, cancellationToken);
+            var userIdentity = loginValidateResult.Value;
+            var getStaff = await _staffRepository.GetByIdentityId(userIdentity.Id, cancellationToken);
             if (getStaff is null)
                 return Result.Fail(new NotFoundError("staff not found"));
             List<AccountRole> toAccountRole = getStaff.Roles.Select(r => (AccountRole)r).ToList();
@@ -235,7 +231,19 @@ namespace DiamondShop.Infrastructure.Securities.Authentication
             return Result.Ok(authTokenDto);
             // throw new NotImplementedException();
         }
-
+        private async Task<Result<CustomIdentityUser>> PasswordLoginValidation(string email, string password)
+        {
+            var tryGetAccount = await _userManager.FindByEmailAsync(email);
+            if (tryGetAccount is null)
+            {
+                return Result.Fail(new NotFoundError("account Not Found"));
+            }
+            if (await _userManager.CheckPasswordAsync(tryGetAccount, password) is false)
+                return Result.Fail(new Error("password not match"));
+            if (await _userManager.IsLockedOutAsync(tryGetAccount) is true)
+                return Result.Fail("can't sign, you might have been block ");
+            return Result.Ok(tryGetAccount);
+        }
         public async Task<Result<(string? refreshToken, DateTime? ExpiredDate)>> GetRefreshToken(string identityId, CancellationToken cancellationToken = default)
         {
             var getIdentity = await _userManager.GetRefreshTokenAsync(identityId, cancellationToken);

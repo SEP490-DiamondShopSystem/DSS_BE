@@ -7,7 +7,7 @@ using DiamondShop.Domain.Roles;
 
 namespace DiamondShop.Domain.Models.StaffAggregate
 {
-    public class Staff : Entity<StaffId>, IAggregateRoot
+    public class Staff : Entity<StaffId>, IAggregateRoot , IAccountBase 
     {
         private Staff()
         {
@@ -20,7 +20,7 @@ namespace DiamondShop.Domain.Models.StaffAggregate
             Email = email;
         }
         public string IdentityId { get; private set; }
-        public List<DiamondShopStoreRoles> Roles { get; private set; } = new();
+        public List<AccountRole> Roles { get; private set; } = new();
         public FullName FullName { get; private set; }
         public string Email { get; private set; }
         public string DepartmentLocation { get; private set; }
@@ -35,14 +35,18 @@ namespace DiamondShop.Domain.Models.StaffAggregate
             IdentityId = identityID;
 
         }
-        public void AddRole(DiamondShopStoreRoles role)
+        public void AddRole(AccountRole role)
         {
             ArgumentNullException.ThrowIfNull(role);
+            if (role.RoleType != AccountRoleAggregate.AccountRoleType.Staff)
+                throw new Exception();
             Roles.Add(role);
         }
-        public void RemoveRole(DiamondShopStoreRoles role)
+        public void RemoveRole(AccountRole role)
         {
             ArgumentNullException.ThrowIfNull(role);
+            if (role.RoleType != AccountRoleAggregate.AccountRoleType.Staff)
+                throw new Exception();
             Roles.Remove(role);
         }
     }

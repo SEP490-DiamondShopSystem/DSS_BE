@@ -39,8 +39,6 @@ namespace DiamondShop.Infrastructure.Databases
         internal DbSet<OutboxMessages> OutboxMessages { get; set; }
         //Roles Related//
         public DbSet<AccountRole> AccountRoles { get; set; }
-        public DbSet<DiamondShopCustomerRole> CustomerRoles { get; set; }
-        public DbSet<DiamondShopStoreRoles> StoreRoles { get; set; }
 
         //Roles Related//
 

@@ -11,7 +11,6 @@ namespace DiamondShop.Domain.Repositories
 {
     public interface IAccountRoleRepository : IBaseRepository<AccountRole>
     {
-        Task<List<DiamondShopCustomerRole>> GetCustomerRoles();
-        Task<List<DiamondShopStoreRoles>> GetStaffRoles(); 
+        Task<List<AccountRole>> GetRoles();
     }
 }
