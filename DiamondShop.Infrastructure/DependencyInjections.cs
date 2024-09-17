@@ -27,6 +27,8 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using DiamondShop.Infrastructure.Outbox;
 using DiamondShop.Infrastructure.Databases.Interceptors;
 using Quartz;
+using Refit;
+using DiamondShop.Infrastructure.Services.Payments.Paypals;
 
 namespace DiamondShop.Infrastructure
 {
@@ -39,6 +41,8 @@ namespace DiamondShop.Infrastructure
             services.AddMyIdentity(configuration);
             services.AddSecurity(configuration);
             services.AddBackgroundJobs(configuration);
+            services.AddHttpClientAndRefit(configuration);
+            services.AddPayments(configuration);
             return services;
         }
         public static IServiceCollection AddPersistance(this IServiceCollection services, IConfiguration configuration)
@@ -118,6 +122,18 @@ namespace DiamondShop.Infrastructure
             });
             return services;
         }
+        internal static IServiceCollection AddHttpClientAndRefit(this IServiceCollection services, IConfiguration configuration)
+        {
+            
+            //services.AddRefitClient<IPaypalClient>()
+            //    .ConfigureHttpClient( (sp , httpClient) => {});
+            return services;
+        }
+        internal static IServiceCollection AddPayments(this IServiceCollection services, IConfiguration configuration) 
+        {
+            services.AddSingleton<PaypalClient>();
+            return services;
+        }
         public static IServiceCollection AddMyOptionsConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             // this configure for current time, exist throughout the app life
@@ -128,6 +144,7 @@ namespace DiamondShop.Infrastructure
             services.Configure<ExternalUrlsOptions>(configuration.GetSection(ExternalUrlsOptions.Section));
             services.Configure<OutboxOptions>(configuration.GetSection(OutboxOptions.Section));
             services.Configure<VnpayOption>(configuration.GetSection(VnpayOption.Section));
+            services.Configure<PaypalOption>(configuration.GetSection(PaypalOption.Section));
             // this also exist throughout the app life, but it is configured at the end of dependency injection,
             // allow it to inject other or override settings , also more cleaner moduler code
             services.ConfigureOptions<JwtBearerOptionSetup>();

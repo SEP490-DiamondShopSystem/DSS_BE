@@ -1,8 +1,12 @@
 using DiamondShop.Api.Controllers;
 using DiamondShop.Application.Services.Interfaces;
+using DiamondShop.Infrastructure.Options;
 using DiamondShop.Infrastructure.Services;
+using DiamondShop.Infrastructure.Services.Payments.Paypals;
+using DiamondShop.Infrastructure.Services.Payments.Paypals.Models;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace DiamondShopSystem.Controllers
 {
@@ -18,12 +22,14 @@ namespace DiamondShopSystem.Controllers
         private readonly ILogger<WeatherForecastController> _logger;
         private readonly IDateTimeProvider _dateTimeProvider;
         private readonly IBlobFileServices _blobFileServices;
+        private readonly IOptions<PaypalOption> _paypal;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IDateTimeProvider dateTimeProvider, IBlobFileServices blobFileServices)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IDateTimeProvider dateTimeProvider, IBlobFileServices blobFileServices, IOptions<PaypalOption> paypal)
         {
             _logger = logger;
             _dateTimeProvider = dateTimeProvider;
             _blobFileServices = blobFileServices;
+            _paypal = paypal;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -80,6 +86,13 @@ namespace DiamondShopSystem.Controllers
         public async Task<ActionResult> basdreqiest()
         {
             return MatchError(new List<IError>(), ModelState); 
+        }
+        [Route("/paypalresponse")]
+        [HttpGet]
+        public async Task<ActionResult> paypal()
+        {
+            var paypalClient = new PaypalClient(_paypal);
+            return Ok( await paypalClient.GetAccessToken());
         }
     }
 }
