@@ -1,5 +1,4 @@
-﻿using BeatvisionRemake.Domain.Common;
-using DiamondShop.Application.Services.Interfaces;
+﻿using DiamondShop.Application.Services.Interfaces;
 using DiamondShop.Domain.Common;
 using DiamondShop.Infrastructure.Outbox;
 using MediatR;

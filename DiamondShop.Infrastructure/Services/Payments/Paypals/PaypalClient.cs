@@ -10,7 +10,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
-
+using RestSharp;
 namespace DiamondShop.Infrastructure.Services.Payments.Paypals
 {
     public class PaypalClient

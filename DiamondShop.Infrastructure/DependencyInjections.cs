@@ -27,7 +27,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using DiamondShop.Infrastructure.Outbox;
 using DiamondShop.Infrastructure.Databases.Interceptors;
 using Quartz;
-using Refit;
 using DiamondShop.Infrastructure.Services.Payments.Paypals;
 
 namespace DiamondShop.Infrastructure
