@@ -66,6 +66,11 @@ namespace DiamondShop.Api.Controllers.ThirdParties
             var result = await _zalopayClient.Callback();
             return Ok(result);  
         }
+        [HttpGet("Return")]
+        public async Task<ActionResult> Return()
+        {
+            return Ok();
+        }
         [HttpPost("TestCallback")]
         public async Task TestCallback()
         {

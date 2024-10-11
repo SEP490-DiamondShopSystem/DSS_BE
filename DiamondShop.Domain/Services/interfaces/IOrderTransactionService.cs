@@ -14,5 +14,6 @@ namespace DiamondShop.Domain.Services.interfaces
         decimal GetDepositValueForOrder(Order order);
         decimal GetFullPaymentValueForOrder(Order order);
         decimal GetRemaingValueForOrder(Order order);
+        decimal GetCODValueForOrder(Order order);
     }
 }

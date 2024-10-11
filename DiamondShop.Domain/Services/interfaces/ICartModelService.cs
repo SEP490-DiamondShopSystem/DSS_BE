@@ -18,10 +18,11 @@ namespace DiamondShop.Domain.Services.interfaces
         //Task<CartModel> CreateFromUserCart(List<CartItem> cartItems);
         void InitOrderPrice(CartModel cartModel);
         void AssignProductAndItemCounter(CartModel cartModel);
-        void ValidateCartModel(CartModel cartModel);
+        void SetCartModelValidation(CartModel cartModel);
         bool IsProduct(CartProduct item);
         Task<Result<CartModel>> Execute(List<CartProduct> products, IDiscountRepository _discountRepository, IPromotionRepository _promotionRepository, IDiamondPriceRepository _diamondPriceRepository, ISizeMetalRepository _sizeMetalRepository, IMetalRepository _metalRepository);
         Task<CartProduct?> FromCartItem(CartItem cartItem, IJewelryRepository _jewelryRepository, IJewelryModelRepository _jewelryModelRepository, IDiamondRepository _diamondRepository);
         Task AssignDefaultPriceToProduct(CartProduct cartProduct,IDiamondPriceRepository _diamondPriceRepository, ISizeMetalRepository _sizeMetalRepository, IMetalRepository _metalRepository);
+        Task ValidateCartItems(CartModel cartModel);
     }
 }

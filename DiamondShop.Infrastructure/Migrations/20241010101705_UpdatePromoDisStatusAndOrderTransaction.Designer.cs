@@ -1631,7 +1631,7 @@ namespace DiamondShop.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = "22",
+                            Id = "2",
                             MethodName = "ZALOPAY",
                             Status = true
                         });

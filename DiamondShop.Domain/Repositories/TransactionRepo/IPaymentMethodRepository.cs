@@ -4,6 +4,7 @@ namespace DiamondShop.Domain.Repositories.TransactionRepo
 {
     public interface IPaymentMethodRepository : IBaseRepository<PaymentMethod>
     {
+        Task<PaymentMethod?> GetByName(string nameNormalized, CancellationToken cancellationToken = default);
     }
 
 }

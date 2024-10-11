@@ -21,11 +21,8 @@
     <Folder Include="Usecases\Orders\Commands\" />
     <Folder Include="Usecases\PromotionRequirements\Commands\Update\" />
     <Folder Include="Usecases\Sizes\Commands\" />
-    <Folder Include="Usecases\Transactions\Commands\AddManual\" />
-    <Folder Include="Usecases\Transactions\Commands\CreatePaymentLink\" />
-    <Folder Include="Usecases\Transactions\Commands\Remove\" />
-    <Folder Include="Usecases\Transactions\Commands\UpdateStatus\" />
-    <Folder Include="Usecases\Transactions\Queries\" />
+    <Folder Include="Usecases\Transactions\Commands\AddManualRefunds\" />
+    <Folder Include="Usecases\Transactions\Queries\GetAll\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,12 +20,17 @@ using DiamondShop.Domain.Services.interfaces;
 using FluentResults;
 using DiamondShop.Domain.Models.Transactions.Entities;
 using DiamondShop.Domain.Models.Orders.ValueObjects;
+using DiamondShop.Infrastructure.Services.Payments.Zalopays.Constants;
+using DiamondShop.Domain.Models.Transactions.Enum;
+using DiamondShop.Domain.BusinessRules;
+using OpenQA.Selenium.DevTools.V127.Page;
+using Microsoft.Extensions.Options;
+using DiamondShop.Infrastructure.Options;
 
 namespace DiamondShop.Infrastructure.Services.Payments.Zalopays
 {
     internal class ZalopayPaymentService : IPaymentService
     {
-        private readonly ZalopayClient _zalopayClient;
         private readonly ILogger<ZalopayPaymentService> _logger;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IOrderRepository _orderRepository;
@@ -33,9 +38,13 @@ namespace DiamondShop.Infrastructure.Services.Payments.Zalopays
         private readonly IPaymentMethodRepository _paymentMethodRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IOrderTransactionService _orderTransactionService;
+        private readonly IOptions<UrlOptions> _urlOptions;
         private static string appid = "2554";
         private static string key1 = "sdngKKJmqEMzvh5QQcdD2A9XBSKUNaYn";
         private static string key2 = "trMrHtvjo6myautxDUiAcYsVtaeQ8nhf";
+        private static string ReturnUri = "api/Zalopay/Return";
+        private static string CallbackUri = "api/Zalopay/Callback";
+
 
         private static string getBankListUrl = "https://sbgateway.zalopay.vn/api/getlistmerchantbanks";
         private static string create_order_url = "https://sb-openapi.zalopay.vn/v2/create";
@@ -43,9 +52,8 @@ namespace DiamondShop.Infrastructure.Services.Payments.Zalopays
         private static string refund_url = "https://sb-openapi.zalopay.vn/v2/refund";
         private static string query_refund_url = "https://sb-openapi.zalopay.vn/v2/query_refund";
 
-        public ZalopayPaymentService(ZalopayClient zalopayClient, ILogger<ZalopayPaymentService> logger, IUnitOfWork unitOfWork, IOrderRepository orderRepository, ITransactionRepository transactionRepository, IPaymentMethodRepository paymentMethodRepository, IHttpContextAccessor httpContextAccessor, IOrderTransactionService orderTransactionService)
+        public ZalopayPaymentService(ILogger<ZalopayPaymentService> logger, IUnitOfWork unitOfWork, IOrderRepository orderRepository, ITransactionRepository transactionRepository, IPaymentMethodRepository paymentMethodRepository, IHttpContextAccessor httpContextAccessor, IOrderTransactionService orderTransactionService, IOptions<UrlOptions> urlOptions)
         {
-            _zalopayClient = zalopayClient;
             _logger = logger;
             _unitOfWork = unitOfWork;
             _orderRepository = orderRepository;
@@ -53,6 +61,7 @@ namespace DiamondShop.Infrastructure.Services.Payments.Zalopays
             _paymentMethodRepository = paymentMethodRepository;
             _httpContextAccessor = httpContextAccessor;
             _orderTransactionService = orderTransactionService;
+            _urlOptions = urlOptions;
         }
 
         public async Task<object> Callback()
@@ -119,13 +128,16 @@ namespace DiamondShop.Infrastructure.Services.Payments.Zalopays
             return result;
         }
 
-        public async Task<Result<PaymentLinkResponse>> CreatePaymentLink(PaymentLinkRequest paymentLinkRequest, CancellationToken cancellationToken)
+        public async Task<Result<PaymentLinkResponse>> CreatePaymentLink(PaymentLinkRequest paymentLinkRequest, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(paymentLinkRequest.Amount);
+            var callbackUrl = string.Concat(_urlOptions.Value.HttpsUrl, CallbackUri);
+            var returnUrl = string.Concat(_urlOptions.Value.HttpsUrl, ReturnUri);
+
             var embed_data = new ZalopayEmbeddedData
             {
                 columninfo = "",
-                redirecturl = paymentLinkRequest.ReturnUrl ,
+                redirecturl = returnUrl,
                 preferred_payment_method = ["domestic_card", "account"],
             };
             var param = new Dictionary<string, string>();
@@ -154,7 +166,7 @@ namespace DiamondShop.Infrastructure.Services.Payments.Zalopays
             //param.Add("item", JsonConvert.SerializeObject(body.item));
             param.Add("description", description);
             param.Add("bank_code", "");
-            param.Add("callback_url", paymentLinkRequest.CallbackUrl);
+            param.Add("callback_url", callbackUrl);
             var data = appid + "|" + param["app_trans_id"] + "|" + param["app_user"] + "|" + param["amount"] + "|"
                 + param["app_time"] + "|" + param["embed_data"] + "|" + param["item"];
             param.Add("mac", HmacHelper.Compute(ZaloPayHMAC.HMACSHA256, key1, data));
@@ -164,29 +176,134 @@ namespace DiamondShop.Infrastructure.Services.Payments.Zalopays
             return Result.Ok(new PaymentLinkResponse { PaymentUrl = result.order_url ,QrCode = result.qr_code });
         }
 
-        public Task GetRefundDetail(Transaction refundTransactionType)
+        public async Task<PaymentRefundDetail> GetRefundDetail(Transaction refundTransactionType)
         {
-            throw new NotImplementedException();
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("app_id", appid);
+            param.Add("timestamp", refundTransactionType.TimeStampe);
+            param.Add("m_refund_id", refundTransactionType.AppTransactionCode);//"190308_2553_xxxxxx");
+
+            var data = appid + "|" + param["m_refund_id"] + "|" + param["timestamp"];
+            param.Add("mac", HmacHelper.Compute(ZaloPayHMAC.HMACSHA256, key1, data));
+
+            var result = await HttpHelper.PostFormAsync<ZalopayRefundResponse>(query_refund_url, param);
+            var code = result.return_code.ToString();
+            bool isProcessing = code switch
+            {
+                ZalopayReturnCode.PROCESSING => true,
+                _ => false
+            } ;
+            return new PaymentRefundDetail()
+            {
+                ReturnCode = result.return_code,
+                SubReturnMessage = result.sub_return_message,
+                SubReturnCode = result.sub_return_code,
+                ReturnMessage = result.return_message,
+                IsProcessing = isProcessing,
+                FineAmount = refundTransactionType.FineAmount,
+                RefundAmount = refundTransactionType.TransactionAmount,
+                PaygateTransactionId = refundTransactionType.PaygateTransactionCode
+            };
         }
 
-        public Task GetTransactionDetail(Transaction payTrasactionType)
+        public async Task<Result<PaymentRefundDetail>> Refund(Order order,Transaction forTransaction, decimal fineAmount, string description = null)
         {
-            throw new NotImplementedException();
+            var getTransactions = await _transactionRepository.GetByOrderId(order.Id);
+            if( (order.TotalRefund + order.TotalFine) >= order.TotalPrice)
+            {
+                return Result.Fail("order is fully refunded");
+            }
+            var totalPaidTransaction = getTransactions.Where(t => t.TransactionType == TransactionType.Pay).Sum(t => t.TransactionAmount);
+            var totalRefundTransaction = getTransactions.Where(t => t.TransactionType == TransactionType.Refund).Sum(t => t.TotalAmount );
+            
+            var timestamp = ZalopayUtils.GetTimeStamp().ToString();
+            var rand = new Random();
+            var uid = timestamp + "" + rand.Next(111, 999).ToString();
+            var appMerchantGenId = DateTime.UtcNow.ToString("yyMMdd") + "_" + appid + "_" + uid;
+            var fineAmountRounded = MoneyVndRoundUpRules.RoundAmountFromDecimal(fineAmount);
+            //var refundAmount = (long) forTransaction.TotalAmount - fineAmountRounded; 
+            //if (refundAmount <= 0)
+            //    throw new Exception("invalid refund amount");
+
+            Dictionary<string, string> param = new Dictionary<string, string>();
+            param.Add("app_id", appid);
+            param.Add("m_refund_id", appMerchantGenId);
+            param.Add("zp_trans_id", forTransaction.PaygateTransactionCode);
+            param.Add("amount", ((long)forTransaction.TotalAmount).ToString());
+            param.Add("timestamp", timestamp);
+            param.Add("description", description is null ? $"hoan tra don hang cho giao dich: {forTransaction.AppTransactionCode} cua don hang: {order.Id.Value} " : description );
+            string data = null;
+            if (fineAmountRounded > 0)
+            {
+                if (fineAmountRounded < forTransaction.TotalAmount)
+                {
+                    param.Add("refund_fee_amount", fineAmountRounded.ToString());
+                    data = appid + "|" + param["zp_trans_id"] + "|" + param["amount"] + "|" + param["refund_fee_amount"] + "|" + param["description"] + "|" + param["timestamp"];
+                }
+                else
+                    throw new Exception("refund fee is greater than the total amount of refund");
+            }
+            else
+                data = appid + "|" + param["zp_trans_id"] + "|" + param["amount"] + "|" + param["description"] + "|" + param["timestamp"];
+
+            param.Add("mac", HmacHelper.Compute(ZaloPayHMAC.HMACSHA256, key1, data));
+
+            var result = await HttpHelper.PostFormAsync<ZalopayRefundResponse>(refund_url, param);
+            if(result.return_code.ToString() == ZalopayReturnCode.FAIL) 
+            {
+                return Result.Fail($"fail with message from paygate: {result.sub_return_message} and code: {result.return_code} ");
+            }
+            PaymentRefundDetail paymentRefundDetail = null;
+            var transaction = Transaction.CreateRefund(forTransaction.PayMethodId, order.Id, forTransaction.Id, description, appMerchantGenId, result.refund_id.ToString(), timestamp, forTransaction.TotalAmount, fineAmountRounded);
+            if (result.return_code.ToString() == ZalopayReturnCode.PROCESSING)
+            {
+                _logger.Log(LogLevel.Information, "refund is processing, need to check later");
+                // try to get 3 times 
+                for(int i = 0; i < 5; i++)
+                {
+                    paymentRefundDetail = await GetRefundDetail(transaction);
+                    if(paymentRefundDetail.IsProcessing)
+                    {
+                        await Task.Delay(1000);
+                        continue;
+                    }
+                    else
+                    {
+                        if (paymentRefundDetail.ReturnCode.ToString() == ZalopayReturnCode.FAIL)
+                            return Result.Fail($"fail with message from paygate: {paymentRefundDetail.SubReturnMessage} and code: {paymentRefundDetail.ReturnCode} ");
+                        else //if you success
+                            break; 
+                    }
+                }
+            }
+            ArgumentNullException.ThrowIfNull(paymentRefundDetail);
+            await _unitOfWork.BeginTransactionAsync();
+            await _transactionRepository.Create(transaction);
+            order.AddRefund(transaction);
+            await _orderRepository.Update(order);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
+            return Result.Ok(paymentRefundDetail) ;
         }
 
-        public Task<Result> Refund(Order order)
+        public async Task<PaymentDetail> GetTransactionDetail(Transaction payTrasactionType)
         {
-            throw new NotImplementedException();
+            var param = new Dictionary<string, string>();
+            param.Add("app_id", appid);
+            param.Add("app_trans_id", payTrasactionType.AppTransactionCode);
+            var data = appid + "|" + payTrasactionType.AppTransactionCode + "|" + key1;
+            param.Add("mac", HmacHelper.Compute(ZaloPayHMAC.HMACSHA256, key1, data));
+            var result = await HttpHelper.PostFormAsync<ZalopayTransactionResponse>(query_order_url, param);
+            return new PaymentDetail() { 
+                AppReceiveAmount = result.amount,
+                IsProcessing = result.is_processing, 
+                PaygateTransactionId = result.zp_trans_id.ToString(),
+                ReturnCode = result.return_code ,
+                ReturnMessage = result.return_message,
+                SubReturnCode = result.sub_return_code,
+                SubReturnMessage = result.sub_return_message
+            };
         }
 
-        public Task GetTransactionDetail(System.Transactions.Transaction payTrasactionType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task GetRefundDetail(System.Transactions.Transaction refundTransactionType)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -18,5 +18,6 @@ namespace DiamondShop.Domain.BusinessRules
         /// </summary>
         public static long MaximumForOneTimeTransaction { get; set; } = 50000000;//50tr
         public static long MinimumForManyTimeTransaction { get; set; } = 25000000;//25tr
+        public static string TransactionTimeStamp { get; set; } = "yyyyMMddHHmmss";
     }
 }

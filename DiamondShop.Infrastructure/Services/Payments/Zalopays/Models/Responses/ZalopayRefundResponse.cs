@@ -14,6 +14,6 @@ namespace DiamondShop.Infrastructure.Services.Payments.Zalopays.Models.Responses
         public string return_message { get; set; }      // Thông tin trạng thái
         public int sub_return_code { get; set; }       // Thông tin chi tiết mã lỗi hoàn tiền
         public string sub_return_message { get; set; }  // Thông tin chi tiết trạng thái
-        public long? refund_id { get; set; }            // Mã giao dịch hoàn tiền của ZaloPay, cần lưu lại để đối chiếu
+        public long refund_id { get; set; }            // Mã giao dịch hoàn tiền của ZaloPay, cần lưu lại để đối chiếu
     }
 }

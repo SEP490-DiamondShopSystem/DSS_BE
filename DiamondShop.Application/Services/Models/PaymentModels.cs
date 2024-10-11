@@ -16,8 +16,8 @@ namespace DiamondShop.Application.Services.Models
         public Order Order { get; set; }
         public string Title { get; set; }
         public string Email { get; set; }
-        public string CallbackUrl { get; set; }
-        public string ReturnUrl{ get; set; }
+        //public string CallbackUrl { get; set; }
+        //public string ReturnUrl{ get; set; }
         public decimal Amount { get; set; }
         public string? Description { get; set; }
         public string? Phone { get; set; }
@@ -46,5 +46,25 @@ namespace DiamondShop.Application.Services.Models
         public string ForAccountId { get; set; }
         public string Description { get; set; }
     }
-
+    public record PaymentDetail
+    {
+        public int ReturnCode { get; set; }           
+        public string ReturnMessage{ get; set; }      // Thông tin trạng thái đơn hàng
+        public int? SubReturnCode { get; set; }       // Mã trạng thái chi tiết
+        public string SubReturnMessage { get; set; }  // Thông tin chi tiết trạng thái đơn 
+        public bool IsProcessing { get; set; }         // Trạng thái xử lý
+        public long? AppReceiveAmount { get; set; }               // Số tiền ứng dụng nhận được (chỉ có ý nghĩa khi thanh toán thành công)
+        public string? PaygateTransactionId { get; set; }
+    }
+    public record PaymentRefundDetail
+    {
+        public int ReturnCode { get; set; }
+        public string ReturnMessage { get; set; }      // Thông tin trạng thái đơn hàng
+        public int? SubReturnCode { get; set; }       // Mã trạng thái chi tiết
+        public string SubReturnMessage { get; set; }  // Thông tin chi tiết trạng thái đơn 
+        public bool IsProcessing { get; set; }         // Trạng thái xử lý
+        public decimal? RefundAmount { get; set; }               // Số tiền ứng dụng nhận được (chỉ có ý nghĩa khi thanh toán thành công)
+        public decimal? FineAmount { get; set; }
+        public string? PaygateTransactionId { get; set; }
+    }
 }

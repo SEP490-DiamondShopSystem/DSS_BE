@@ -1,6 +1,7 @@
 ﻿using DiamondShop.Domain.Common.Carts;
 using DiamondShop.Domain.Models.AccountAggregate.Entities;
 using DiamondShop.Domain.Models.AccountAggregate.ValueObjects;
+using DiamondShop.Domain.Models.JewelryModels;
 using DiamondShop.Domain.Repositories;
 using DiamondShop.Domain.Repositories.JewelryModelRepo;
 using DiamondShop.Domain.Repositories.JewelryRepo;
@@ -20,19 +21,24 @@ namespace DiamondShop.Domain.Services.Implementations
         private readonly IDiamondServices _diamondServices;
         private readonly IPromotionServices _promotionServices;
         private readonly IDiscountService _discountService;
-        //private readonly IDiamondRepository _diamondRepository;
-        //private readonly IJewelryRepository _jewelryRepository;
-        //private readonly IJewelryModelRepository _jewelryModelRepository;
-        //private readonly IPromotionRepository _promotionRepository;
-        //private readonly IDiscountRepository _discountRepository;
+        private readonly IDiamondRepository _diamondRepository;
+        private readonly IJewelryRepository _jewelryRepository;
+        private readonly IJewelryModelRepository _jewelryModelRepository;
+        private readonly IPromotionRepository _promotionRepository;
+        private readonly IDiscountRepository _discountRepository;
 
-        public CartModelService( IDiamondServices diamondServices, IPromotionServices promotionServices, IDiscountService discountService)
+        public CartModelService(IDiamondServices diamondServices, IPromotionServices promotionServices, IDiscountService discountService, IDiamondRepository diamondRepository, IJewelryRepository jewelryRepository, IJewelryModelRepository jewelryModelRepository, IPromotionRepository promotionRepository, IDiscountRepository discountRepository)
         {
             _diamondServices = diamondServices;
             _promotionServices = promotionServices;
             _discountService = discountService;
+            _diamondRepository = diamondRepository;
+            _jewelryRepository = jewelryRepository;
+            _jewelryModelRepository = jewelryModelRepository;
+            _promotionRepository = promotionRepository;
+            _discountRepository = discountRepository;
         }
-        
+
         public void AssignProductAndItemCounter(CartModel cartModel)
         {
             var products = cartModel.Products;
@@ -56,7 +62,8 @@ namespace DiamondShop.Domain.Services.Implementations
             AssignProductAndItemCounter(cartModel);
             cartModel.Products.ForEach(async prd => await AssignDefaultPriceToProduct(prd, _diamondPriceRepository, _sizeMetalRepository, _metalRepository));
             InitOrderPrice(cartModel);
-            ValidateCartModel(cartModel);
+            ValidateCartItems(cartModel).Wait();
+            SetCartModelValidation(cartModel);
             var getDiscount = await _discountRepository.GetActiveDiscount();
             var getPromotion = await _promotionRepository.GetActivePromotion();
             foreach (var discount in getDiscount ) 
@@ -92,7 +99,7 @@ namespace DiamondShop.Domain.Services.Implementations
             return true;// if diamond only have its own id, then it is a main product
         }
 
-        public void ValidateCartModel(CartModel cartModel)
+        public void SetCartModelValidation(CartModel cartModel)
         {
             for (int i = 0; i < cartModel.Products.Count; i++)
             {
@@ -160,6 +167,38 @@ namespace DiamondShop.Domain.Services.Implementations
 
             }
             cartProduct.ReviewPrice = reviewPrice;
+        }
+
+        public Task ValidateCartItems(CartModel cartModel)
+        {
+            var products = cartModel.Products;
+            foreach (var product in products)
+            {
+                if (product.Jewelry != null && product.Diamond != null && product.JewelryModel != null)
+                    throw new Exception("some how this product have all 3 id, diamond, jewelry and model , from product: " + product.CartProductId);
+                var result = CheckIsSoldOrActive(product);
+                if (result.IsFailed)
+                {
+                    product.IsAvailable = false;
+                }
+            }
+            int[] unavailableItemIndex = products.Where(p => p.IsAvailable is false).Select(p => products.IndexOf(p)).ToArray();
+            cartModel.OrderValidation.UnavailableItemIndex = unavailableItemIndex;
+            return Task.CompletedTask;
+        }
+        private Result CheckIsSoldOrActive(CartProduct product) 
+        {
+            if (product.Jewelry is not null)
+                return product.Jewelry.IsSold ? Result.Fail("already sold") : Result.Ok();
+            if (product.Diamond is not null)
+            {
+                if (product.Diamond.IsActive is false)
+                    return Result.Fail("not active");
+                return product.Diamond.IsSold ? Result.Fail("already sold") : Result.Ok();
+            }
+            if (product.JewelryModel is not null) { }
+            return Result.Fail("unknonw product type");
+                //return product.JewelryModel.
         }
     }
     

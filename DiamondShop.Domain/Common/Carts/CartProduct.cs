@@ -17,6 +17,7 @@ namespace DiamondShop.Domain.Common.Carts
         public string? EngravedFont { get; set; }
         //public decimal? PurchasedPrice { get; set; }
         public bool IsValid { get => (Jewelry != null || Diamond != null || JewelryModel != null); }
+        public bool IsAvailable { get; set; } = true; // always true unless when check the product is sold or inactive
         /////////////////////////////////
         /////////////////////////////////
         public DiscountId? DiscountId { get; set; }

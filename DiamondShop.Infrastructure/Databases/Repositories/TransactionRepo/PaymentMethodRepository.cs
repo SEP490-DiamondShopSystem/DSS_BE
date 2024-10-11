@@ -1,5 +1,6 @@
 ﻿using DiamondShop.Domain.Models.Transactions.Entities;
 using DiamondShop.Domain.Repositories.TransactionRepo;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,11 @@ namespace DiamondShop.Infrastructure.Databases.Repositories.TransactionRepo
         public PaymentMethodRepository(DiamondShopDbContext dbContext) : base(dbContext)
         {
 
+        }
+
+        public Task<PaymentMethod?> GetByName(string nameNormalized, CancellationToken cancellationToken = default)
+        {
+            return _set.Where(_set => _set.MethodName.ToUpper() == nameNormalized.ToUpper()).FirstOrDefaultAsync(cancellationToken);
         }
     }
 }

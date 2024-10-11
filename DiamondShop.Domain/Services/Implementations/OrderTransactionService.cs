@@ -23,15 +23,27 @@ namespace DiamondShop.Domain.Services.Implementations
             _transactionRepository = transactionRepository;
         }
 
+        public decimal GetCODValueForOrder(Order order)
+        {
+            if (order.PaymentType != Models.Orders.Enum.PaymentType.COD)
+            {
+                throw new Exception("this is not of type COD ");
+            }
+            var codPercent = OrderPaymentRules.CODPercent;
+            var neededToPayAmountRaw = order.TotalPrice * (Decimal.Divide(codPercent, 100));
+            var roundedValue = MoneyVndRoundUpRules.RoundAmountFromDecimal(neededToPayAmountRaw); //Math.Round(Decimal.Divide(neededToPayAmountRaw, 1000), 1) * 1000;//the function is tested in linq pad
+            return roundedValue;
+        }
+
         public decimal GetDepositValueForOrder(Order order)
         {
-            if (order.PaymentStatus != Models.Orders.Enum.PaymentType.COD)
+            if (order.PaymentType != Models.Orders.Enum.PaymentType.COD)
             {
                 throw new Exception("this is not of type COD ");
             }
             var depositPercent = OrderPaymentRules.DepositPercent;
             var neededToPayAmountRaw = order.TotalPrice * (Decimal.Divide(depositPercent,100));
-            var roundedValue = Math.Round(Decimal.Divide(neededToPayAmountRaw, 1000), 1) * 1000;//the function is tested in linq pad
+            var roundedValue = MoneyVndRoundUpRules.RoundAmountFromDecimal(neededToPayAmountRaw); //Math.Round(Decimal.Divide(neededToPayAmountRaw, 1000), 1) * 1000;//the function is tested in linq pad
             return roundedValue;
         }
 

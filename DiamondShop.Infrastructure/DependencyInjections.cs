@@ -163,6 +163,7 @@ namespace DiamondShop.Infrastructure
         {
             services.AddSingleton<PaypalClient>();
             services.AddSingleton<ZalopayClient>();
+            services.AddTransient<IPaymentService, ZalopayPaymentService>();
             return services;
         }
 
