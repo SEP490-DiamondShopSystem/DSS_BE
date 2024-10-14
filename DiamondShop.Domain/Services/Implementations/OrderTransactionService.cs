@@ -1,5 +1,6 @@
 ﻿using DiamondShop.Domain.BusinessRules;
 using DiamondShop.Domain.Models.Orders;
+using DiamondShop.Domain.Models.Transactions;
 using DiamondShop.Domain.Repositories.TransactionRepo;
 using DiamondShop.Domain.Services.interfaces;
 using FluentResults;
@@ -50,6 +51,22 @@ namespace DiamondShop.Domain.Services.Implementations
         public decimal GetFullPaymentValueForOrder(Order order)
         {
             return order.TotalPrice;
+        }
+
+        public async Task<Transaction> GetRefundAmountFromOrder(Order order, decimal fineAmount, string description)
+        {
+            if(order.PaymentStatus == Models.Orders.Enum.PaymentStatus.Refunded)
+            {
+                throw new Exception("this order is already refunded");
+            }
+            var sumTransactions = order.Transactions.Where(t => t.TransactionType == Models.Transactions.Enum.TransactionType.Pay).Sum(x => x.TotalAmount);
+            var refundTrans = order.Transactions.Where(t => t.TransactionType == Models.Transactions.Enum.TransactionType.Refund || t.TransactionType == Models.Transactions.Enum.TransactionType.Partial_Refund).Sum(x => x.TotalAmount);
+            var leftAmount = sumTransactions - refundTrans;
+            if(leftAmount <= 0)
+                throw new Exception("the order is already refunded");
+            if(leftAmount - fineAmount <= 0)
+                throw new Exception("the fine amount is more or the same as the left amount to refund");
+            return Transaction.CreateManualRefund(order.Id,description,leftAmount - fineAmount,fineAmount);
         }
 
         public decimal GetRemaingValueForOrder(Order order)

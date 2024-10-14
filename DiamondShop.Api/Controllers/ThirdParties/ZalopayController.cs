@@ -1,4 +1,5 @@
-﻿using DiamondShop.Infrastructure.Options;
+﻿using DiamondShop.Application.Services.Interfaces;
+using DiamondShop.Infrastructure.Options;
 using DiamondShop.Infrastructure.Services.Payments.Zalopays;
 using DiamondShop.Infrastructure.Services.Payments.Zalopays.Models;
 using DiamondShop.Infrastructure.Services.Payments.Zalopays.Models.Responses;
@@ -18,15 +19,18 @@ namespace DiamondShop.Api.Controllers.ThirdParties
     {
         private readonly IOptions<UrlOptions> _urlOptions;
         private readonly ZalopayClient _zalopayClient;
+        private readonly IPaymentService _paymentService;
 
-        public ZalopayController(IOptions<UrlOptions> urlOptions, ZalopayClient zalopayClient)
+        public ZalopayController(IOptions<UrlOptions> urlOptions, ZalopayClient zalopayClient, IPaymentService paymentService)
         {
             _urlOptions = urlOptions;
             _zalopayClient = zalopayClient;
+            _paymentService = paymentService;
         }
 
         [HttpPost]
         [Produces<ZalopayCreateOrderResponse>]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> CreateOrder([FromBody]ZalopayCreateOrderBody body )
         {
             var myUrl = _urlOptions.Value.HttpsUrl;
@@ -41,6 +45,7 @@ namespace DiamondShop.Api.Controllers.ThirdParties
         }
         [HttpGet("Transaction/{app_transaction_id}")]
         [Produces<ZalopayTransactionResponse>]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> GetTransactionDetail(string app_transaction_id )
         {
             var result = await _zalopayClient.GetTransactionDetail(app_transaction_id);
@@ -48,6 +53,7 @@ namespace DiamondShop.Api.Controllers.ThirdParties
         }
         [HttpGet("Transaction/refund/{merchant_refund_id}/{time_stamp}")]
         [Produces<ZalopayRefundResponse>]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> GetRefundTransactionDetail(string merchant_refund_id, string time_stamp)
         {
             var result = await _zalopayClient.GetRefundTransactionDetail(merchant_refund_id, time_stamp);
@@ -55,6 +61,7 @@ namespace DiamondShop.Api.Controllers.ThirdParties
         }
         [HttpPost("Transaction/refund")]
         [Produces<ZalopayRefundResponse>]
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> RefundTransaction([FromForm] string zalo_trans_id, [FromForm] long amount, [FromForm] long refund_ree = 0)
         {
             var result = await _zalopayClient.RefundTransaction(zalo_trans_id,amount,refund_ree );
@@ -63,25 +70,14 @@ namespace DiamondShop.Api.Controllers.ThirdParties
         [HttpPost("Callback")]
         public async Task<ActionResult> Callback()
         {
-            var result = await _zalopayClient.Callback();
+            var result = await _paymentService.Callback();
             return Ok(result);  
         }
         [HttpGet("Return")]
         public async Task<ActionResult> Return()
         {
+            //this will redirect client to the frontend, but not important for now, so just return ok
             return Ok();
         }
-        [HttpPost("TestCallback")]
-        public async Task TestCallback()
-        {
-            var result = new Dictionary<string, object>();
-            result["return_code"] = 1;
-            result["return_message"] = "success";
-            var jsonResult = JsonConvert.SerializeObject(result);
-            HttpContext.Response.ContentType = "application/json";
-            await HttpContext.Response.WriteAsync(jsonResult);
-            //return Ok();
-        }
-
     }
 }

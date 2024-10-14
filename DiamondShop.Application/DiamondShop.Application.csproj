@@ -21,8 +21,7 @@
     <Folder Include="Usecases\Orders\Commands\" />
     <Folder Include="Usecases\PromotionRequirements\Commands\Update\" />
     <Folder Include="Usecases\Sizes\Commands\" />
-    <Folder Include="Usecases\Transactions\Commands\AddManualRefunds\" />
-    <Folder Include="Usecases\Transactions\Queries\GetAll\" />
+    <Folder Include="Usecases\Transactions\Commands\CreateRefunds\" />
   </ItemGroup>
 
   <ItemGroup>
