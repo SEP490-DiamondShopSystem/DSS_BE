@@ -1,5 +1,6 @@
 ﻿using DiamondShop.Application.Dtos.Requests.Orders;
 using DiamondShop.Application.Services.Interfaces;
+using DiamondShop.Domain.Models.Orders;
 using DiamondShop.Domain.Models.Orders.Enum;
 using DiamondShop.Domain.Models.Orders.ValueObjects;
 using DiamondShop.Domain.Repositories.OrderRepo;
@@ -13,8 +14,8 @@ using System.Threading.Tasks;
 
 namespace DiamondShop.Application.Usecases.Orders.Commands.Preparing
 {
-    public record PreparingOrderCommand(string orderId) : IRequest<Result>;
-    internal class PreparingOrderCommandHandler : IRequestHandler<PreparingOrderCommand, Result>
+    public record PreparingOrderCommand(string orderId) : IRequest<Result<Order>>;
+    internal class PreparingOrderCommandHandler : IRequestHandler<PreparingOrderCommand, Result<Order>>
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IOrderItemRepository _orderItemRepository;
@@ -27,7 +28,7 @@ namespace DiamondShop.Application.Usecases.Orders.Commands.Preparing
             _orderItemRepository = orderItemRepository;
         }
 
-        public async Task<Result> Handle(PreparingOrderCommand request, CancellationToken token)
+        public async Task<Result<Order>> Handle(PreparingOrderCommand request, CancellationToken token)
         {
             request.Deconstruct(out string orderId);
             await _unitOfWork.BeginTransactionAsync(token);
@@ -50,7 +51,7 @@ namespace DiamondShop.Application.Usecases.Orders.Commands.Preparing
             await _unitOfWork.SaveChangesAsync(token);
             await _unitOfWork.CommitAsync(token);
             //TODO: Add notification
-            return Result.Ok();
+            return Result.Ok(order);
         }
     }
 }

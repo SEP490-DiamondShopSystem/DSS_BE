@@ -54,15 +54,23 @@ namespace DiamondShop.Application.Usecases.Transactions.Commands.CreatePaymentLi
             var getPaymentMethod = await _paymentMethodRepository.GetById(request.paymentMethodName);
             if(getPaymentMethod == null)
                 return Result.Fail(new NotFoundError("Payment method not found"));
-            if(tryGetOrder.CustomizeRequestId == null)
-            {
-                return await CreateForNormalOrder(tryGetAcc, tryGetOrder, request.PaymentType);   
-            }
-            else
-            {
-                return await CreateForCustomOrder(tryGetAcc, tryGetOrder, request.PaymentType);
-            }
+            return await CreateForOrder(tryGetAcc, tryGetOrder, request.PaymentType);
+            //if(tryGetOrder.CustomizeRequestId == null)
+            //{
+            //    return await CreateForNormalOrder(tryGetAcc, tryGetOrder, request.PaymentType);   
+            //}
+            //else
+            //{
+            //    return await CreateForCustomOrder(tryGetAcc, tryGetOrder, request.PaymentType);
+            //}
         }
+        private async Task<Result<PaymentLinkResponse>> CreateForOrder(Account account, Order order, PaymentType paymentType)
+        {
+            PaymentLinkRequest request = new PaymentLinkRequest { Amount = order.TotalPrice, Account = account, Order = order, Email = account.Email, };
+            Result<PaymentLinkResponse> paymentResponse = await _paymentService.CreatePaymentLink(request);
+            return paymentResponse;
+        }
+
         private async Task<Result<PaymentLinkResponse>> CreateForNormalOrder(Account account, Order order, PaymentType paymentType)
         {
             decimal amountToCreate = 0;

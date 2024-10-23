@@ -14,6 +14,7 @@ using DiamondShop.Domain.Models.Transactions.Entities;
 using DiamondShop.Domain.Models.Transactions.ValueObjects;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text; 
 using System.Threading.Tasks; 
@@ -51,6 +52,8 @@ namespace DiamondShop.Domain.Models.Orders
         public DateTime? ExpiredDate { get; set; }
         public DateTime? ShipFailedDate{ get; set; }
         public int ShipFailedCount { get; set; } = 0;
+        [NotMapped]
+        public bool IsCustomOrder { get => CustomizeRequestId != null; }
         public void AddTransaction(Transaction transactionTypePay) 
         {
             if(transactionTypePay.TransactionType != Models.Transactions.Enum.TransactionType.Pay)

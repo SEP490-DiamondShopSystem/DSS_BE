@@ -1,5 +1,6 @@
 ﻿using DiamondShop.Application.Services.Interfaces;
 using DiamondShop.Domain.Models.AccountAggregate.ValueObjects;
+using DiamondShop.Domain.Models.Orders;
 using DiamondShop.Domain.Models.Orders.Enum;
 using DiamondShop.Domain.Models.Orders.ValueObjects;
 using DiamondShop.Domain.Repositories.OrderRepo;
@@ -13,8 +14,8 @@ using System.Threading.Tasks;
 
 namespace DiamondShop.Application.Usecases.Orders.Commands.Complete
 {
-    public record CompleteOrderCommand(string orderId, string staffId) : IRequest<Result>;
-    internal class CompleteOrderCommandHandler : IRequestHandler<CompleteOrderCommand, Result>
+    public record CompleteOrderCommand(string orderId, string staffId) : IRequest<Result<Order>>;
+    internal class CompleteOrderCommandHandler : IRequestHandler<CompleteOrderCommand, Result<Order>>
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IDeliveryPackageRepository _deliveryPackageRepository;
@@ -27,7 +28,7 @@ namespace DiamondShop.Application.Usecases.Orders.Commands.Complete
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Result> Handle(CompleteOrderCommand request, CancellationToken token)
+        public async Task<Result<Order>> Handle(CompleteOrderCommand request, CancellationToken token)
         {
             request.Deconstruct(out string orderId, out string staffId);
             await _unitOfWork.BeginTransactionAsync(token);
@@ -54,7 +55,7 @@ namespace DiamondShop.Application.Usecases.Orders.Commands.Complete
 
             await _unitOfWork.SaveChangesAsync(token);
             await _unitOfWork.CommitAsync(token);
-            return Result.Ok();
+            return Result.Ok(order);
         }
     }
 }

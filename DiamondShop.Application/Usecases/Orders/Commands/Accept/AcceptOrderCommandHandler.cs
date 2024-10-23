@@ -1,5 +1,6 @@
 ﻿using DiamondShop.Application.Dtos.Requests.Orders;
 using DiamondShop.Application.Services.Interfaces;
+using DiamondShop.Domain.Models.Orders;
 using DiamondShop.Domain.Models.Orders.Enum;
 using DiamondShop.Domain.Models.Orders.ValueObjects;
 using DiamondShop.Domain.Models.Transactions;
@@ -11,8 +12,8 @@ using MediatR;
 
 namespace DiamondShop.Application.Usecases.Orders.Commands.Accept
 {
-    public record AcceptOrderCommand(string orderId) : IRequest<Result>;
-    internal class AcceptOrderCommandHandler : IRequestHandler<AcceptOrderCommand, Result>
+    public record AcceptOrderCommand(string orderId) : IRequest<Result<Order>>;
+    internal class AcceptOrderCommandHandler : IRequestHandler<AcceptOrderCommand, Result<Order>>
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IOrderItemRepository _orderItemRepository;
@@ -26,7 +27,7 @@ namespace DiamondShop.Application.Usecases.Orders.Commands.Accept
             _orderItemRepository = orderItemRepository;
         }
 
-        public async Task<Result> Handle(AcceptOrderCommand request, CancellationToken token)
+        public async Task<Result<Order>> Handle(AcceptOrderCommand request, CancellationToken token)
         {
             request.Deconstruct(out string orderId);
             await _unitOfWork.BeginTransactionAsync(token);
@@ -60,7 +61,7 @@ namespace DiamondShop.Application.Usecases.Orders.Commands.Accept
             await _unitOfWork.SaveChangesAsync(token);
             await _unitOfWork.CommitAsync(token);
             //TODO: Add notification
-            return Result.Ok();
+            return Result.Ok(order);
         }
     }
 }

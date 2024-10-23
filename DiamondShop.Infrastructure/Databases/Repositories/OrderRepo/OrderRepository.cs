@@ -19,7 +19,7 @@ namespace DiamondShop.Infrastructure.Databases.Repositories.OrderRepo
 
         public override Task<Order?> GetById(params object[] ids)
         {
-            return _set.Include(o => o.Transactions).FirstOrDefaultAsync(o => o.Id == (OrderId)ids[0]);
+            return _set.Include(o => o.Transactions).Include(x => x.Items).FirstOrDefaultAsync(o => o.Id == (OrderId)ids[0]);
         }
 
         public void UpdateRange(List<Order> orders)

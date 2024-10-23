@@ -3,6 +3,7 @@ using DiamondShop.Application.Services.Interfaces;
 using DiamondShop.Domain.Models.AccountAggregate.ValueObjects;
 using DiamondShop.Domain.Models.Diamonds;
 using DiamondShop.Domain.Models.Jewelries;
+using DiamondShop.Domain.Models.Orders;
 using DiamondShop.Domain.Models.Orders.Enum;
 using DiamondShop.Domain.Models.Orders.ValueObjects;
 using DiamondShop.Domain.Repositories;
@@ -15,8 +16,8 @@ using MediatR;
 
 namespace DiamondShop.Api.Controllers.Orders.Cancel
 {
-    public record CancelOrderCommand(string OrderId, string AccountId, bool ByShop) : IRequest<Result>;
-    public record CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, Result>
+    public record CancelOrderCommand(string OrderId, string AccountId, bool ByShop) : IRequest<Result<Order>>;
+    public record CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, Result<Order>>
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IOrderItemRepository _orderItemRepository;
@@ -37,7 +38,7 @@ namespace DiamondShop.Api.Controllers.Orders.Cancel
             _transactionRepository = transactionRepository;
         }
 
-        public async Task<Result> Handle(CancelOrderCommand request, CancellationToken token)
+        public async Task<Result<Order>> Handle(CancelOrderCommand request, CancellationToken token)
         {
             request.Deconstruct(out string orderId, out string accountId, out bool byShop);
             await _unitOfWork.BeginTransactionAsync();
@@ -91,7 +92,7 @@ namespace DiamondShop.Api.Controllers.Orders.Cancel
 
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();
-            return Result.Ok();
+            return Result.Ok(order);
         }
     }
 }

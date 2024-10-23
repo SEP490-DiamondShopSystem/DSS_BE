@@ -163,16 +163,21 @@ namespace DiamondShop.Infrastructure.Services.Payments.Zalopays
             var callbackUrl = string.Concat(_urlOptions.Value.HttpsUrl,"/", CallbackUri);
             var returnUrl = string.Concat(_urlOptions.Value.HttpsUrl,"/", ReturnUri);
 
+            var order = paymentLinkRequest.Order;
             var embed_data = new ZalopayEmbeddedData
             {
                 columninfo = "",
                 redirecturl = returnUrl,
                 preferred_payment_method =[]//["domestic_card", "account"],
             };
+            var correctAmount = _orderTransactionService.GetCorrectAmountFromOrder(order);
+
             var param = new Dictionary<string, string>();
             var app_trans_id = DateTime.UtcNow.ToString("yyyyMMddHHmmss"); //rnd.Next(100000000); // Generate a random order's ID.
             var userId = paymentLinkRequest.Account.Id.Value;
-            var amount = paymentLinkRequest.Amount;
+            //var amount = paymentLinkRequest.Amount;
+            var amount = correctAmount;
+
             var timeStampe = ZalopayUtils.GetTimeStamp().ToString();
             var description = paymentLinkRequest.Description is null ? $"thanh toan cho don hang {paymentLinkRequest.Order.Id.Value}, timestampe = {timeStampe}" : paymentLinkRequest.Description;
             PaymentMetadataBodyPerTransaction descriptionBodyJson = new PaymentMetadataBodyPerTransaction

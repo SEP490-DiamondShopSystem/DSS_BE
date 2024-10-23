@@ -116,7 +116,8 @@ namespace DiamondShop.Api.Controllers.Orders
                 var result = await _sender.Send(new CancelOrderCommand(orderId, userId.Value, false));
                 if (result.IsSuccess)
                 {
-                    return Ok("Order cancelled!");
+                    var mappedResult = _mapper.Map<OrderDto>(result.Value);
+                    return Ok(mappedResult);
                 }
                 else
                     return MatchError(result.Errors, ModelState);
@@ -135,7 +136,8 @@ namespace DiamondShop.Api.Controllers.Orders
                 var result = await _sender.Send(new CancelOrderCommand(orderId, userId.Value, true));
                 if (result.IsSuccess)
                 {
-                    return Ok("Order rejected!");
+                    var mappedResult = _mapper.Map<OrderDto>(result.Value);
+                    return Ok(mappedResult);
                 }
                 else
                     return MatchError(result.Errors, ModelState);
@@ -151,7 +153,8 @@ namespace DiamondShop.Api.Controllers.Orders
             var result = await _sender.Send(acceptOrderCommand);
             if (result.IsSuccess)
             {
-                return Ok("Order accepted!");
+                var mappedResult = _mapper.Map<OrderDto>(result.Value);
+                return Ok(mappedResult);
             }
             else
                 return MatchError(result.Errors, ModelState);
@@ -164,7 +167,8 @@ namespace DiamondShop.Api.Controllers.Orders
             var result = await _sender.Send(preparingOrderCommand);
             if (result.IsSuccess)
             {
-                return Ok("Order prepared!");
+                var mappedResult = _mapper.Map<OrderDto>(result.Value);
+                return Ok(mappedResult);
             }
             else
                 return MatchError(result.Errors, ModelState);
@@ -192,7 +196,8 @@ namespace DiamondShop.Api.Controllers.Orders
                 var result = await _sender.Send(new CompleteOrderCommand(orderId, userId.Value));
                 if (result.IsSuccess)
                 {
-                    return Ok("Order completed!");
+                    var mappedResult = _mapper.Map<OrderDto>(result.Value);
+                    return Ok(mappedResult);
                 }
                 else
                     return MatchError(result.Errors, ModelState);
